@@ -141,6 +141,8 @@ class MVLinear:
         return s
 
     def __call__(self, *args, **kwargs) -> int:
+        if len(args) == 0:
+            return self.eval([])
         if isinstance(args[0], list):
             return self.eval(args[0])
         return self.eval(list(args))
