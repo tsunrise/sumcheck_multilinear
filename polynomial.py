@@ -84,6 +84,6 @@ class MVLinear:
                 if ans.terms[k] == 0:
                     ans.terms.pop(k)
             else:
-                ans.terms[k] = other.terms[k] & self.p
+                ans.terms[k] = (- other.terms[k]) % self.p
 
         return ans
