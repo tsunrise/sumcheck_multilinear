@@ -1,4 +1,10 @@
+"""
+Interactive Verifier of Multilinear Polynomial Sum
+Tom Shen
+"""
+
 from random import Random
+from typing import List, Tuple
 
 from polynomial import MVLinear
 
@@ -16,6 +22,9 @@ class InteractiveVerifier:
         :param asserted_sum: The proposed sum (0 and 1) of the multilinear function (which is to be verified)
         """
         self.p: int = polynomial.p
+        """
+        The field size
+        """
         self.poly: MVLinear = polynomial
         self.asserted_sum: int = asserted_sum % self.p
         self.rand: Random = Random()
@@ -40,6 +49,62 @@ class InteractiveVerifier:
             else:
                 self._reject_and_close()
                 return
+
+        self.points: List[int] = [0] * self.poly.num_variables
+        """
+        the fixed points that are already decided by the verifier. At round i, [0, i-1] are decided
+        """
+
+        self.round: int = 0
+        """
+        which variable the verifier is summing (at round i, var 0 to var (i-1) is fixed, and the verifier is listening 
+        to the univariate function of variable i where var[i+1, n] is summed over.  
+        """
+
+        self.expect: int = self.asserted_sum
+        """
+        The expected sum value at round i
+        """
+
+    def prove(self, p0: int, p1: int) -> Tuple[bool, int]:
+        """
+        Send the verifier the univariate linear polynomial P(x).
+        At round i, P(x) = sum over b: P(r_1, ..., r_i-1, x, b_i+1, b_i+2, ...)
+        where r is fixed (as proposed by self.points)
+        :param p0: P(0)
+        :param p1: P(1)
+        :return: a tuple (accept?, random r for x). If accept? is false, the returned integer is meaningless.
+        """
+
+        # if the protocol is not active, throw an error
+        if not self.active:
+            raise RuntimeError("Unable to prove: the protocol is not active. ")
+
+        # check that P(0) + P(1) is in fact self.expect
+        p0 %= self.p
+        p1 %= self.p
+        if (p0 + p1) % self.p != self.expect % self.p:
+            self._reject_and_close()
+            return False, 0
+
+        # pick r at random
+        r: int = self.rand.randint(0, self.p)
+        pr: int = (p0 + r * (p1 - p0)) % self.p  # gradient formula
+        self.expect = pr
+        self.points[self.round] = r
+
+        # if not final step, end here
+        if not (self.round + 1 == self.poly.num_variables):
+            self.round += 1
+            return True, r
+
+        # final step: check all
+        final_sum = self.poly.eval(self.points)
+        if pr != final_sum:
+            self._reject_and_close()
+            return False, 0
+        self._convince_and_close()
+        return True, 0
 
     def _convince_and_close(self):
         """
