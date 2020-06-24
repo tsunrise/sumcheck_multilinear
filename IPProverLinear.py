@@ -30,25 +30,30 @@ class InteractiveLinearProver:
         self.poly: MVLinear = polynomial
         self.p = self.poly.p  # field size
 
-    def attemptProve(self, A, verifier: InteractiveVerifier) -> None:
+    def attemptProve(self, A: List[int], verifier: InteractiveVerifier) -> float:
         """
         Attempt to prove the sum.
+        :param A: The bookkeeping table
         :param verifier:
-        :return: Whether the verifier accepts the proof; the running time of verifier
+        :return: the running time of verifier
         """
         l = self.poly.num_variables
+        vT: float = 0
         for i in range(1, l + 1):  # round
             p0 = 0  # sum over P(fixed, 0, ...)
             p1 = 0  # sum over P(fixed, 1, ...)
             for b in range(2**(l-i)):
                 p0 += A[b]
                 p1 += A[b + 2**(l-i)]
-
+            start = time.time() * 1000
             result, r = verifier.prove(p0, p1)
-
+            end = time.time() * 1000
+            assert result
+            vT += end - start
             for b in range(2**(l-i)):
                 A[b] = (A[b] * (1 - r) + A[b + 2**(l - i)] * r) % self.p
 
+        return vT
 
     def calculateTable(self) -> Tuple[List[int], int]:
         """
