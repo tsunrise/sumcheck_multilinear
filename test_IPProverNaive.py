@@ -31,7 +31,7 @@ class TestInteractiveNaiveProver(TestCase):
         self.assertTrue(v.convinced, "Verifier not convinced. ")
 
     def testBenchMark(self):
-        num_variables = 10
+        num_variables = 12
         num_terms = 1500
         m = makeMVLinearConstructor(num_variables, 199)
 

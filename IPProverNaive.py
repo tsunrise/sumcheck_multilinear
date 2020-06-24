@@ -4,6 +4,7 @@ from polynomial import MVLinear
 from IPVerifier import InteractiveVerifier
 import time
 
+
 def binaryToList(b: int, numVariables: int) -> List[int]:
     """
     Change binary form to list of arguments.
@@ -18,6 +19,7 @@ def binaryToList(b: int, numVariables: int) -> List[int]:
         b >>= 1
         i += 1
     return lst
+
 
 class InteractiveNaiveProver:
     """
@@ -61,4 +63,3 @@ class InteractiveNaiveProver:
             s = (s + result) % self.p
 
         return s
-
