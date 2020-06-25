@@ -110,7 +110,7 @@ class MVLinear:
         for sk in self.terms:  # the term of self
             for ok in other.terms:  # the term of others
                 if sk & ok > 0:
-                    raise ValueError("The product is no longer multi-linear function.")
+                    raise ArithmeticError("The product is no longer multi-linear function.")
                 nk = sk + ok  # the result term
                 if nk in terms:
                     terms[nk] = (terms[nk] + self.terms[sk] * other.terms[ok]) % self.p
