@@ -24,12 +24,12 @@ class TestInteractiveLinearProver(TestCase):
         print("Asserted sum: {}".format(s))
 
         v = InteractiveVerifier(random.randint(0, 0xFFFFFFFF), p, s)
-        pv.attemptProve(A, v)
+        pv.attemptProve(A, v, showDialog=True)
         self.assertTrue(v.convinced, "Verifier not convinced. ")
 
     def testBenchMark(self):
         num_variables = 12
-        num_terms = 1500
+        num_terms = 2**12
         m = makeMVLinearConstructor(num_variables, 199)
 
         d: Dict[int, int] = dict()

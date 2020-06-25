@@ -30,11 +30,12 @@ class InteractiveLinearProver:
         self.poly: MVLinear = polynomial
         self.p = self.poly.p  # field size
 
-    def attemptProve(self, A: List[int], verifier: InteractiveVerifier) -> float:
+    def attemptProve(self, A: List[int], verifier: InteractiveVerifier, showDialog: bool = False) -> float:
         """
         Attempt to prove the sum.
         :param A: The bookkeeping table
         :param verifier:
+        :param showDialog: whether show the dialog for test purpose
         :return: the running time of verifier
         """
         l = self.poly.num_variables
@@ -43,13 +44,18 @@ class InteractiveLinearProver:
             p0 = 0  # sum over P(fixed, 0, ...)
             p1 = 0  # sum over P(fixed, 1, ...)
             for b in range(2**(l-i)):
-                p0 += A[b]
-                p1 += A[b + 2**(l-i)]
-            start = time.time() * 1000
+                p0 = (p0 + A[b]) % self.p
+                p1 = (p1 + A[b + 2**(l-i)]) % self.p
+            if showDialog:
+                print(f"Round {i}: Prover Send P{i}(0) = {p0}, P{i}(1) = {p1}. "
+                      f"P{i}(0) + P{i}(1) = {(p0 + p1) % self.p}")
+            start = time.time() * 1000  # timing
             result, r = verifier.prove(p0, p1)
-            end = time.time() * 1000
+            end = time.time() * 1000    # timing
             assert result
-            vT += end - start
+            vT += end - start   # timing
+            if showDialog and verifier.active:
+                print(f"Verifier expects P{i+1}(0) + P{i+1}(1) to be P{i}({r}) = {verifier.expect}")
             for b in range(2**(l-i)):
                 A[b] = (A[b] * (1 - r) + A[b + 2**(l - i)] * r) % self.p
 
