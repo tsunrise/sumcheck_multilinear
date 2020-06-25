@@ -60,3 +60,5 @@ v.prove(p(26, 0), p(26, 1))  # returns (True, 0), v.active = False, v.convinced 
 - Completed: A faster prover using dynamic programming taking O(2^n) time. (Reference: Xie, Zhang, Zhang, Papamanthou, Song, 2019, https://eprint.iacr.org/2019/317.pdf)
 - Todo: A non-interactive verifier using random oracle based on SHA256 (using Fiat-Shamir Transform). 
 - TBD
+
+![image-20200625132007528](assets/image-20200625132007528.png)
