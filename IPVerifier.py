@@ -66,6 +66,9 @@ class InteractiveVerifier:
         The expected sum value at round i
         """
 
+    def randomR(self) -> int:
+        return self.rand.randint(0, self.p)
+
     def prove(self, p0: int, p1: int) -> Tuple[bool, int]:
         """
         Send the verifier the univariate linear polynomial P(x).
@@ -88,7 +91,7 @@ class InteractiveVerifier:
             return False, 0
 
         # pick r at random
-        r: int = self.rand.randint(0, self.p)
+        r: int = self.randomR()
         pr: int = (p0 + r * (p1 - p0)) % self.p  # gradient formula
         self.expect = pr
         self.points[self.round] = r
