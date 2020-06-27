@@ -153,7 +153,8 @@ class MVLinear:
         s = ""
         for k in self.terms:
             s += " + "
-            s += str(self.terms[k])
+            if self.terms[k] != 1:
+                s += str(self.terms[k])
 
             i = 0
             while k != 0:
