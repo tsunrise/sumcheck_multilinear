@@ -1,4 +1,5 @@
 import copy
+import random
 from typing import Dict, List, Union, Callable
 
 
@@ -160,3 +161,12 @@ def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, i
 
     return f
 
+
+def randomMVLinear(num_variables: int) -> MVLinear:
+    num_terms = 2**num_variables
+
+    m = makeMVLinearConstructor(num_variables, 982451653)
+    d: Dict[int, int] = dict()
+    for _ in range(num_terms):
+        d[random.randint(0, 2 ** num_variables - 1)] = random.randint(0, 982451652)
+    return m(d)
