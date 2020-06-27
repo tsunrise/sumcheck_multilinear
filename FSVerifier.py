@@ -1,4 +1,5 @@
 import random
+from copy import copy
 from typing import List, Tuple
 
 from polynomial import MVLinear
@@ -13,8 +14,8 @@ class Proof:
     """
 
     def __init__(self, poly: MVLinear, assertedSum: int, proverMessage: List[Tuple[int, int]]):
-        self.prover_message: List[Tuple[int, int]] = proverMessage
-        self.poly: MVLinear = poly
+        self.prover_message: List[Tuple[int, int]] = copy(proverMessage)
+        self.poly: MVLinear = copy(poly)
         self.asserted_sum = assertedSum
 
 
@@ -38,7 +39,7 @@ def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]], byteLeng
 
 
 def verifyProof(proof: Proof, byteLength: int = 512) -> bool:
-    v = PseudoRandomVerifier(random.randint(), proof.poly, proof.asserted_sum, byteLength)
+    v = PseudoRandomVerifier(proof.poly, proof.asserted_sum, byteLength)
     for msg_pair in proof.prover_message:
         result, _ = v.prove(msg_pair[0], msg_pair[1])
         if not result:
@@ -48,8 +49,8 @@ def verifyProof(proof: Proof, byteLength: int = 512) -> bool:
 
 
 class PseudoRandomVerifier(InteractiveVerifier):
-    def __init__(self, seed: int, polynomial: MVLinear, asserted_sum: int, byteLength: int = 512):
-        super().__init__(seed, polynomial, asserted_sum)
+    def __init__(self,  polynomial: MVLinear, asserted_sum: int, byteLength: int = 512):
+        super().__init__(0, polynomial, asserted_sum)
         self.proverMessages: List[Tuple[int, int]] = []
         self.byteLength = byteLength
 
