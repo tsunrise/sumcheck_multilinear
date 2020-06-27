@@ -1,6 +1,7 @@
 import copy
 import random
 from typing import Dict, List, Union, Callable
+from IPython.display import display, Latex
 
 
 class MVLinear:
@@ -147,6 +148,23 @@ class MVLinear:
         if isinstance(args[0], list):
             return self.eval(args[0])
         return self.eval(list(args))
+
+    def latex(self):
+        s = ""
+        for k in self.terms:
+            s += " + "
+            s += str(self.terms[k])
+
+            i = 0
+            while k != 0:
+                if k & 1 == 1:
+                    s += "x_{" + str(i)+"}"
+                i += 1
+                k >>= 1
+
+        s = s[3:]
+        display(Latex('$' + s + '$'))
+
 
 
 def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, int]], MVLinear]:
