@@ -166,7 +166,9 @@ class MVLinear:
         s = s[3:]
         display(Latex('$' + s + '$'))
 
-
+    def __eq__(self, other: 'MVLinear') -> bool:
+        diff = self - other
+        return len(diff.terms) == 0  # zero polynomial
 
 def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, int]], MVLinear]:
     """
