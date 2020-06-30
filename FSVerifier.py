@@ -27,8 +27,16 @@ class Proof:
         self.prover_message = proverMessage
 
 
-def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]], byteLength: int = 512):
-    sha = hashlib.sha512()  # todo: can change to blake (configurable)
+def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]]) -> int:
+    """
+    Sample a random element in the field using hash function which takes the polynomial and prover message as input.
+    :param poly: The polynomial
+    :param proverMessage: List of Tuple of P(0), P(1)
+    :return:
+    """
+    hash_size = (poly.p.bit_length() + 7) // 8
+    byteLength = hash_size
+    sha = hashlib.blake2b(pickle.dumps(poly), digest_size=hash_size)
 
     # append input: polynomial
     sha.update(pickle.dumps(poly))
@@ -42,8 +50,11 @@ def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]], byteLeng
         sha.update(b'X')
         sha.update(p1.to_bytes(byteLength, 'little'))
 
-    result = int.from_bytes(sha.digest(), 'little') % poly.p  # approx correct
-    # pick something small / rejection sampling (by pick the next power of 2)
+    result = int.from_bytes(sha.digest(), 'little')
+    while result >= poly.p:
+        sha.update(b'\xFF')  # rejection sampling
+        result = int.from_bytes(sha.digest(), 'little')
+
     return result
 
 
@@ -68,7 +79,7 @@ class PseudoRandomVerifier(InteractiveVerifier):
         return super(PseudoRandomVerifier, self).talk(p0, p1)
 
     def randomR(self) -> int:
-        return randomElement(self.poly, self.proverMessages, byteLength=self.byteLength)
+        return randomElement(self.poly, self.proverMessages)
 
 
 # todo: next step
