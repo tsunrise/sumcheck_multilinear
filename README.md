@@ -63,13 +63,19 @@ v.talk(p(26, 0), p(26, 1))  # returns (True, 0), v.active = False, v.convinced =
 # Verifier accepts the result
 ```
 
-## Todo List
-
+## Project Todo List
+### Phase 1: Multilinear Polynomial
 - Completed: A sparse representation and evaluation oracle for multilinear function. 
 - Completed: An Interactive Verifier. 
 - Completed: A naïve prover, taking O(n*2^n) time. 
 - Completed: A faster prover using dynamic programming taking O(2^n) time. (Reference: Xie, Zhang, Zhang, Papamanthou, Song, 2019, https://eprint.iacr.org/2019/317.pdf)
-- Completed: A non-interactive verifier using random oracle based on SHA256 (using Fiat-Shamir Transform). 
-- TBD
+- Completed: A non-interactive verifier using random oracle based on Flake-2b (using Fiat-Shamir Transform). 
+
+### Phase 2: Product of Multilinear Polynomial
+- Todo: Representation of Product of Multilinear Polynomial (PMF)
+- Todo: An Interactive Verifier for PMF Sum
+- Todo: A linear prover of PMF Sum
+- Todo: Fiat-Shamir Transform
+
 
 ![image-20200625132007528](assets/image-20200625132007528.png)
