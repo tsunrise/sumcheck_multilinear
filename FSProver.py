@@ -1,9 +1,11 @@
-from FSVerifier import Proof, PseudoRandomVerifier
+from typing import Tuple
+
+from FSVerifier import Theorem, PseudoRandomVerifier, Proof
 from IPProverLinear import InteractiveLinearProver
 from polynomial import MVLinear
 
 
-def generateProof(poly: MVLinear) -> Proof:
+def generateTheoremAndProof(poly: MVLinear) -> Tuple[Theorem, Proof]:
     """
     Generate an offline proof of the multilinear polynomial sum.
     :param poly: The multilinear poly to be looked at.
@@ -17,5 +19,5 @@ def generateProof(poly: MVLinear) -> Proof:
     assert v.convinced
 
     msgs = v.proverMessages
-    return Proof(poly, s, msgs)
+    return Theorem(poly, s), Proof(msgs)
 

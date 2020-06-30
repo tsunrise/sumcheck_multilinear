@@ -8,15 +8,23 @@ import hashlib
 from IPVerifier import InteractiveVerifier
 
 
-class Proof:
+class Theorem:
     """
-    A data structure representing offline proof of multilinear sum.
+    A data structure representing offline theorem of multilinear sum.
     """
 
-    def __init__(self, poly: MVLinear, assertedSum: int, proverMessage: List[Tuple[int, int]]):
-        self.prover_message: List[Tuple[int, int]] = copy(proverMessage)
-        self.poly: MVLinear = copy(poly)  # todo: remove: change to be in theorem
-        self.asserted_sum = assertedSum   # todo: remove: same
+    def __init__(self, poly: MVLinear, assertedSum: int):
+        self.poly: MVLinear = copy(poly)
+        self.asserted_sum = assertedSum
+
+
+class Proof:
+    """
+    A data structure representing proof of a theorem.
+    """
+
+    def __init__(self, proverMessage: List[Tuple[int, int]]):
+        self.prover_message = proverMessage
 
 
 def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]], byteLength: int = 512):
@@ -39,8 +47,8 @@ def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]], byteLeng
     return result
 
 
-def verifyProof(proof: Proof, byteLength: int = 512) -> bool:
-    v = PseudoRandomVerifier(proof.poly, proof.asserted_sum, byteLength)
+def verifyProof(theorem: Theorem, proof: Proof, byteLength: int = 512) -> bool:
+    v = PseudoRandomVerifier(theorem.poly, theorem.asserted_sum, byteLength)
     for msg_pair in proof.prover_message:
         result, _ = v.talk(msg_pair[0], msg_pair[1])
         if not result:
