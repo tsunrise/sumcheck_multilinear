@@ -69,7 +69,7 @@ class InteractiveVerifier:
     def randomR(self) -> int:
         return self.rand.randint(0, self.p)
 
-    def prove(self, p0: int, p1: int) -> Tuple[bool, int]:
+    def talk(self, p0: int, p1: int) -> Tuple[bool, int]:
         """
         Send the verifier the univariate linear polynomial P(x).
         At round i, P(x) = sum over b: P(r_1, ..., r_i-1, x, b_i+1, b_i+2, ...)

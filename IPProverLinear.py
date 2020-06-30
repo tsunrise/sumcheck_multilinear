@@ -50,7 +50,7 @@ class InteractiveLinearProver:
                 print(f"Round {i}: Prover Send P{i}(0) = {p0}, P{i}(1) = {p1}. "
                       f"P{i}(0) + P{i}(1) = {(p0 + p1) % self.p}")
             start = time.time() * 1000  # timing
-            result, r = verifier.prove(p0, p1)
+            result, r = verifier.talk(p0, p1)
             end = time.time() * 1000    # timing
             assert result
             vT += end - start   # timing

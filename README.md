@@ -8,6 +8,7 @@ A python implementation of sumcheck protocol for multilinear polynomials. Sumche
 Each multilinear polynomial is an instance of `MVLinear` class. We need to specify the number of variables in the polynomial, the coefficient of each monomial, and the size of the finite field of this polynomial. Example: 
 
 ```python
+from polynomial import MVLinear
 # P(x0, x1, x2, x3) = 15 + x0 + 4*x3 + x1*x2 + 5*x2*x3 (in Z_37)
 P = MVLinear(4, {0b0000: 15, 0b0001: 1, 0b1000: 4, 0b0110: 1, 0b1100: 5}, 37)
 ```
@@ -21,6 +22,7 @@ We can also use `makeLinearConstructor` to generate polynomials with same number
 Examples for polynomial operations: 
 
 ```python
+from polynomial import makeMVLinearConstructor
 m = makeMVLinearConstructor(4, 37)
 x0 = m({0b1: 1})
 x1 = m({0b10: 1})
@@ -45,10 +47,19 @@ The constructor of the verifier takes `seed` (random source), `polynomial` (the 
 Example: 
 
 ```python
+from polynomial import makeMVLinearConstructor
+from IPVerifier import InteractiveVerifier
+m = makeMVLinearConstructor(4, 37)
+x0 = m({0b1: 1})
+x1 = m({0b10: 1})
+x2 = m({0b100: 1})
+x3 = m({0b1000: 4})
+x4 = m({0b10000: 5})
+
 p = 2*x0 + 3 * x1 + 3
 v = InteractiveVerifier(12345, p, 22)  # v.active = True, v.convinced = False
-v.prove(p(0,0)+p(0,1), p(1,0)+p(1,1))  # returns (True, 26), v.active = True, v.convinced = False
-v.prove(p(26, 0), p(26, 1))  # returns (True, 0), v.active = False, v.convinced = True
+v.talk(p(0,0)+p(0,1), p(1,0)+p(1,1))  # returns (True, 26), v.active = True, v.convinced = False
+v.talk(p(26, 0), p(26, 1))  # returns (True, 0), v.active = False, v.convinced = True
 # Verifier accepts the result
 ```
 

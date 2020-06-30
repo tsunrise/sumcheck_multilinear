@@ -15,12 +15,12 @@ class Proof:
 
     def __init__(self, poly: MVLinear, assertedSum: int, proverMessage: List[Tuple[int, int]]):
         self.prover_message: List[Tuple[int, int]] = copy(proverMessage)
-        self.poly: MVLinear = copy(poly)
-        self.asserted_sum = assertedSum
+        self.poly: MVLinear = copy(poly)  # todo: remove: change to be in theorem
+        self.asserted_sum = assertedSum   # todo: remove: same
 
 
 def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]], byteLength: int = 512):
-    sha = hashlib.sha512()
+    sha = hashlib.sha512()  # todo: can change to blake (configurable)
 
     # append input: polynomial
     sha.update(pickle.dumps(poly))
@@ -34,14 +34,15 @@ def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]], byteLeng
         sha.update(b'X')
         sha.update(p1.to_bytes(byteLength, 'little'))
 
-    result = int.from_bytes(sha.digest(), 'little') % poly.p
+    result = int.from_bytes(sha.digest(), 'little') % poly.p  # approx correct
+    # pick something small / rejection sampling (by pick the next power of 2)
     return result
 
 
 def verifyProof(proof: Proof, byteLength: int = 512) -> bool:
     v = PseudoRandomVerifier(proof.poly, proof.asserted_sum, byteLength)
     for msg_pair in proof.prover_message:
-        result, _ = v.prove(msg_pair[0], msg_pair[1])
+        result, _ = v.talk(msg_pair[0], msg_pair[1])
         if not result:
             return False
 
@@ -54,9 +55,15 @@ class PseudoRandomVerifier(InteractiveVerifier):
         self.proverMessages: List[Tuple[int, int]] = []
         self.byteLength = byteLength
 
-    def prove(self, p0: int, p1: int) -> Tuple[bool, int]:
+    def talk(self, p0: int, p1: int) -> Tuple[bool, int]:
         self.proverMessages.append((p0, p1))
-        return super(PseudoRandomVerifier, self).prove(p0, p1)
+        return super(PseudoRandomVerifier, self).talk(p0, p1)
 
     def randomR(self) -> int:
         return randomElement(self.poly, self.proverMessages, byteLength=self.byteLength)
+
+
+# todo: next step
+# todo: product of multilinear (start with 2 product)
+# todo: case of sparse polynomial (2*n variables -> 2^(2n) monomials) (in this case, 2^n sparse monomials):
+#  different algorithm

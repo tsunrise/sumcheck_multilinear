@@ -42,7 +42,7 @@ class InteractiveNaiveProver:
             p0 = self.calculateSum(fixed + [0])
             p1 = self.calculateSum(fixed + [1])
             start = time.time() * 1000
-            accept, r = verifier.prove(p0, p1)
+            accept, r = verifier.talk(p0, p1)
             end = time.time() * 1000
             vTime += (end - start)
             if not accept:
