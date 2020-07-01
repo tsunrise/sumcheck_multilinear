@@ -11,13 +11,13 @@ class PMF:
 
     def __init__(self, multiplicands: List[MVLinear]):
         if len(multiplicands) == 0:
-            raise ArithmeticError("Multiplicands are empty.")
+            raise ValueError("Multiplicands are empty.")
         self.num_variables = multiplicands[0].num_variables
         self.p = multiplicands[0].p
         for poly in multiplicands:
             self.num_variables = max(self.num_variables, poly.num_variables)
             if poly.p != self.p:
-                raise ArithmeticError("Field size mismatch.")
+                raise ValueError("Field size mismatch.")
 
         self.multiplicands: List[MVLinear] = [copy(poly) for poly in multiplicands]
 
