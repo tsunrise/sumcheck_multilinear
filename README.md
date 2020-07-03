@@ -79,7 +79,7 @@ x2 = m({0b100: 1})
 
 from PMF import PMF
 p = PMF([x2*x1 + x0,x1*4 + x2*x1 + x0*x1])
-v = InteractivePMFVerifier(12345, p, 22)
+v = InteractivePMFVerifier(12345, p, 22) 
 p(0,0,0)+p(0,0,1)+p(0,1,0)+p(0,1,1)  # 5
 p(1,0,0)+p(1,0,1)+p(1,1,0)+p(1,1,1)  # 17
 p(2,0,0)+p(2,0,1)+p(2,1,0)+p(2,1,1)  # 33
@@ -96,6 +96,53 @@ p(106,187,2)  # 38
 v.talk([176,162,38])  # verifier convinced
 ```
 
+### Interactive Prover
+#### Interactive Prover for Multilinear polynomial
+The interactive prover is represented by the `InteractiveLinearProver` class. 
+The prover first precalculates the evaluations of polynomials on {0,1}^n and the sum of it. 
+Then, the prover talks to the verifier interactively to convince the verifier about the sum. 
+```python
+from IPVerifier import InteractiveVerifier
+from IPProverLinear import InteractiveLinearProver
+from polynomial import randomMVLinear
+from random import randint
+# suppose we have a polynomial p
+p = randomMVLinear(6)
+
+# initialize the prover
+pv = InteractiveLinearProver(p)
+# calculate the book keeping table and sum
+A, s = pv.calculateTable()
+
+# initialize the verifier
+v = InteractiveVerifier(randint(0xFFFFFFFF), p, s)
+
+# convince the verifier
+pv.attemptProve(A, v)
+```  
+#### Interactive Prover for PMF (Products of Multilinear Polynomials)
+The interactive protocol for PMF is similar
+```python
+from IPPMFVerifier import InteractivePMFVerifier
+from IPPMFProver import InteractivePMFProver
+from polynomial import randomMVLinear
+from random import randint
+from PMF import PMF
+
+# suppose we have a PMF p, which is the product of 5 multilinear polynomials with 5 variables
+p = PMF([randomMVLinear(5) for _ in range(5)])
+
+# initialize the prover
+pv = InteractivePMFProver(p)
+# calculate the book keeping tables and sum
+As, s = pv.calculateAllBookKeepingTables()
+
+# initialize the verifier
+v = InteractivePMFVerifier(randint(0xFFFFFFFF), p, s)
+
+# convince the verifier
+pv.attemptProve(As, v)
+```
 
 
 ## Project Todo List
