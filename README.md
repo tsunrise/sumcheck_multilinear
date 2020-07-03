@@ -1,9 +1,9 @@
 # Sumcheck protocol for Multilinear polynomials
-A python implementation of sumcheck protocol for multilinear polynomials. Sumcheck protocol is useful in interactive proofs (IP). 
+A python implementation of sumcheck protocol for multilinear polynomial and product of multilinear polynomials (PMF). Sumcheck protocol is useful in interactive proofs (IP). 
 
 ## Getting Started
 
-### Represent a multilinear polynomial
+#### Represent a multilinear polynomial
 
 Each multilinear polynomial is an instance of `MVLinear` class. We need to specify the number of variables in the polynomial, the coefficient of each monomial, and the size of the finite field of this polynomial. Example: 
 
@@ -40,6 +40,10 @@ p*p2  # MVLinear( + 2*x1x2 + 14*x0x1x2 + 2*x0x2 + 16*x2 + 12*x1x3 + 10*x0x1x3 + 
 p*p # ArithmeticError: no longer multilinear
 ```
 
+#### Represent a product of multilinear polynomial (PMF)
+
+
+
 ### Initialize the Interactive Verifier
 
 The constructor of the verifier takes `seed` (random source), `polynomial` (the multilinear polynomial to check), `asserted_sum` (the sum that the prover is going to prove). At the beginning, the verifier is not convinced. When the prover calls prove and send the verifier a univariate linear polynomial (represented by P(0) and P(1)), the verifier verifies the sum, sends a random value back, and goes to next round. 
@@ -62,6 +66,37 @@ v.talk(p(0,0)+p(0,1), p(1,0)+p(1,1))  # returns (True, 26), v.active = True, v.c
 v.talk(p(26, 0), p(26, 1))  # returns (True, 0), v.active = False, v.convinced = True
 # Verifier accepts the result
 ```
+
+Example for PMF (Product of Multilinear polynomial) Verifier:
+```python
+from polynomial import makeMVLinearConstructor
+from IPPMFVerifier import InteractivePMFVerifier
+
+m = makeMVLinearConstructor(3, 199)
+x0 = m({0b1: 1})
+x1 = m({0b10: 1})
+x2 = m({0b100: 1})
+
+from PMF import PMF
+p = PMF([x2*x1 + x0,x1*4 + x2*x1 + x0*x1])
+v = InteractivePMFVerifier(12345, p, 22)
+p(0,0,0)+p(0,0,1)+p(0,1,0)+p(0,1,1)  # 5
+p(1,0,0)+p(1,0,1)+p(1,1,0)+p(1,1,1)  # 17
+p(2,0,0)+p(2,0,1)+p(2,1,0)+p(2,1,1)  # 33
+
+v.talk([5,17,33])
+p(106,0,0)+p(106,0,1)  # 0
+p(106,1,0)+p(106,1,1)  # 254
+p(106,2,0)+p(106,2,1)  # 133
+
+v.talk([0, 254%199,133])
+p(106,187,0)  # 176
+p(106,187,1)  # 162
+p(106,187,2)  # 38
+v.talk([176,162,38])  # verifier convinced
+```
+
+
 
 ## Project Todo List
 ### Phase 1: Multilinear Polynomial

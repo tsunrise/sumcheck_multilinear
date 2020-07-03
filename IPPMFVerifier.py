@@ -110,6 +110,19 @@ class InteractivePMFVerifier:
         self.convinced = False
         self.active = False
 
+    def _repr_html_(self):
+        if self.active:
+            status = f"🕒 Active ({self.round}/{self.poly.num_variables})"
+            style = "background-color: aqua; color:black; border-radius: 5px"
+        elif self.convinced:
+            status = f"✔ Convinced"
+            style = "background-color: green; color:white; border-radius: 5px"
+        else:
+            status = f"❌ Reject"
+            style = "background-color: red; color:white; border-radius: 5px"
+
+        return f"<a style='{style}'>{status}</a> <b>PMFVerifier</b>(<i>#Multiplicands</i>={self.poly.num_multiplicands()}," \
+               f" <i>#Variables</i>={self.poly.num_variables}, <i>P</i>={self.p})"
 
 def modInverse(a: int, m: int):
     """
