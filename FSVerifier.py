@@ -1,4 +1,3 @@
-import random
 from copy import copy
 from typing import List, Tuple
 
