@@ -185,9 +185,9 @@ def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, i
 
 def randomMVLinear(num_variables: int) -> MVLinear:
     num_terms = 2**num_variables
-
-    m = makeMVLinearConstructor(num_variables, 982451653)
+    prime = 0x38e357d009a75b7d2c94202fe6bfa4d883ae8ab7350db2abe98060e29a90220180ab9e2a051823b2fbcde66805d6ac09fb5944030069165a9812bffaef141
+    m = makeMVLinearConstructor(num_variables, prime)
     d: Dict[int, int] = dict()
     for _ in range(num_terms):
-        d[random.randint(0, 2 ** num_variables - 1)] = random.randint(0, 982451652)
+        d[random.randint(0, 2 ** num_variables - 1)] = random.randint(0, prime-1)
     return m(d)

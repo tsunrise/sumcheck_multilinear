@@ -58,8 +58,8 @@ def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]]) -> int:
     return result
 
 
-def verifyProof(theorem: Theorem, proof: Proof, byteLength: int = 512) -> bool:
-    v = PseudoRandomVerifier(theorem.poly, theorem.asserted_sum, byteLength)
+def verifyProof(theorem: Theorem, proof: Proof) -> bool:
+    v = PseudoRandomVerifier(theorem.poly, theorem.asserted_sum)
     for msg_pair in proof.prover_message:
         result, _ = v.talk(msg_pair[0], msg_pair[1])
         if not result:
@@ -69,10 +69,9 @@ def verifyProof(theorem: Theorem, proof: Proof, byteLength: int = 512) -> bool:
 
 
 class PseudoRandomVerifier(InteractiveVerifier):
-    def __init__(self,  polynomial: MVLinear, asserted_sum: int, byteLength: int = 512):
+    def __init__(self,  polynomial: MVLinear, asserted_sum: int):
         super().__init__(0, polynomial, asserted_sum)
         self.proverMessages: List[Tuple[int, int]] = []
-        self.byteLength = byteLength
 
     def talk(self, p0: int, p1: int) -> Tuple[bool, int]:
         self.proverMessages.append((p0, p1))
