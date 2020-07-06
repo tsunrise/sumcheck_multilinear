@@ -10,7 +10,7 @@ def binaryToList(b: int, numVariables: int) -> List[int]:
     Change binary form to list of arguments.
     :param b: The binary form. For example: 0b1011 means g(x0=1, x1 = 1, x2 = 0, x3 = 1)
     :param numVariables: The number of variables
-    :return:
+    :return: List of integer where the ith element is xi.
     """
     lst: List[int] = [0] * numVariables
     i = 0
