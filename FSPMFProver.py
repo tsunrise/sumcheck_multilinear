@@ -5,11 +5,11 @@ from IPPMFProver import InteractivePMFProver
 from FSPMFVerifier import PseudoRandomPMFVerifier, Theorem, Proof
 
 
-def generateTheoremAndProof(poly: PMF) -> Tuple[Theorem, Proof]:
+def generateTheoremAndProof(poly: PMF) -> Tuple[Theorem, Proof, PseudoRandomPMFVerifier]:
     """
     Generate the theorem (poly itself and the asserted sum) and its proof.
     :param poly: The PMF polynomial
-    :return: theorem and proof
+    :return: theorem, proof, and the (hopefully) convinced pseudorandom verifier
     """
     pv = InteractivePMFProver(poly)
     As, s = pv.calculateAllBookKeepingTables()
@@ -20,5 +20,5 @@ def generateTheoremAndProof(poly: PMF) -> Tuple[Theorem, Proof]:
     theorem = Theorem(poly, s)
     proof = Proof(v.proverMessages)
 
-    return theorem, proof
+    return theorem, proof, v
 

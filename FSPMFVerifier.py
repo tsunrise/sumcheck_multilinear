@@ -1,5 +1,6 @@
 import hashlib
 import pickle
+import time
 from copy import copy
 from typing import List
 
@@ -65,10 +66,16 @@ class PseudoRandomPMFVerifier(InteractivePMFVerifier):
     def __init__(self, polynomial: PMF, asserted_sum: int):
         super().__init__(0, polynomial, asserted_sum)
         self.proverMessages: List[List[int]] = []
+        self.runtime = 0
+        # for timing stat
 
     def talk(self, msgs: List[int]):
         self.proverMessages.append(copy(msgs))
-        return super(PseudoRandomPMFVerifier, self).talk(msgs)
+        t0 = time.time()
+        result = super(PseudoRandomPMFVerifier, self).talk(msgs)
+        t1 = time.time()
+        self.runtime += t1 - t0
+        return result
 
     def randomR(self) -> int:
         return randomElement(self.poly, self.proverMessages)
