@@ -3,7 +3,7 @@ import random
 from typing import Dict, List, Union, Callable
 from IPython.display import display, Latex
 
-
+from Crypto.Util.number import getPrime
 class MVLinear:
     """
     A Sparse Representation of a multi-linear polynomial.
@@ -159,7 +159,7 @@ class MVLinear:
             i = 0
             while k != 0:
                 if k & 1 == 1:
-                    s += "x_{" + str(i)+"}"
+                    s += "x_{" + str(i) + "}"
                 i += 1
                 k >>= 1
 
@@ -170,6 +170,7 @@ class MVLinear:
         diff = self - other
         return len(diff.terms) == 0  # zero polynomial
 
+
 def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, int]], MVLinear]:
     """
     Return a function that outputs MVLinear
@@ -177,17 +178,22 @@ def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, i
     :param p: size of the field
     :return: Callable[[Dict[int, int]], MVLinear]
     """
+
     def f(term: Dict[int, int]) -> MVLinear:
         return MVLinear(num_variables, term, p)
 
     return f
 
 
-def randomMVLinear(num_variables: int) -> MVLinear:
-    num_terms = 2**num_variables
-    prime = 0x38e357d009a75b7d2c94202fe6bfa4d883ae8ab7350db2abe98060e29a90220180ab9e2a051823b2fbcde66805d6ac09fb5944030069165a9812bffaef141
+def randomMVLinear(num_variables: int, field_size: int = 128) -> MVLinear:
+    num_terms = 2 ** num_variables
+    prime = randomPrime(field_size)
     m = makeMVLinearConstructor(num_variables, prime)
     d: Dict[int, int] = dict()
     for _ in range(num_terms):
-        d[random.randint(0, 2 ** num_variables - 1)] = random.randint(0, prime-1)
+        d[random.randint(0, 2 ** num_variables - 1)] = random.randint(0, prime - 1)
     return m(d)
+
+
+def randomPrime(size: int) -> int:
+    return getPrime(size)

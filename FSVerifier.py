@@ -1,4 +1,5 @@
 from copy import copy
+from enum import Enum
 from typing import List, Tuple
 
 from polynomial import MVLinear
@@ -6,6 +7,7 @@ import pickle
 import hashlib
 from IPVerifier import InteractiveVerifier
 
+MAX_ALLOWED_SOUNDNESS_ERROR = 2**(-32)
 
 class Theorem:
     """
@@ -57,8 +59,9 @@ def randomElement(poly: MVLinear, proverMessage: List[Tuple[int, int]]) -> int:
     return result
 
 
-def verifyProof(theorem: Theorem, proof: Proof) -> bool:
-    v = PseudoRandomVerifier(theorem.poly, theorem.asserted_sum)
+def verifyProof(theorem: Theorem, proof: Proof,
+                maximumAllowedSoundnessError: float = MAX_ALLOWED_SOUNDNESS_ERROR) -> bool:
+    v = PseudoRandomVerifier(theorem.poly, theorem.asserted_sum, maximumAllowedSoundnessError)
     for msg_pair in proof.prover_message:
         result, _ = v.talk(msg_pair[0], msg_pair[1])
         if not result:
@@ -68,8 +71,9 @@ def verifyProof(theorem: Theorem, proof: Proof) -> bool:
 
 
 class PseudoRandomVerifier(InteractiveVerifier):
-    def __init__(self,  polynomial: MVLinear, asserted_sum: int):
-        super().__init__(0, polynomial, asserted_sum)
+    def __init__(self,  polynomial: MVLinear, asserted_sum: int, maximumAllowedSoundnessError: float):
+        super().__init__(0, polynomial, asserted_sum,
+                         maxAllowedSoundnessError=maximumAllowedSoundnessError / polynomial.num_variables)  # #rounds
         self.proverMessages: List[Tuple[int, int]] = []
 
     def talk(self, p0: int, p1: int) -> Tuple[bool, int]:

@@ -2,11 +2,13 @@
 Interactive Verifier of Multilinear Polynomial Sum
 Tom Shen
 """
-
+import math
 from random import Random
 from typing import List, Tuple
 
 from polynomial import MVLinear
+
+DEFAULT_MAX_ALLOWED_SOUNDNESS_ERROR = 2 ** (-32)
 
 
 class InteractiveVerifier:
@@ -14,12 +16,14 @@ class InteractiveVerifier:
     An interactive verifier that verifies the sum of the multi-linear polynomial
     """
 
-    def __init__(self, seed: int, polynomial: MVLinear, asserted_sum: int):
+    def __init__(self, seed: int, polynomial: MVLinear, asserted_sum: int,
+                 maxAllowedSoundnessError: float = DEFAULT_MAX_ALLOWED_SOUNDNESS_ERROR):
         """
         Initialize the protocol of the verifier.
         :param seed: the random source
         :param polynomial: The multilinear function
         :param asserted_sum: The proposed sum (0 and 1) of the multilinear function (which is to be verified)
+        :param maxAllowedSoundnessError: the maximum soundness error allowed
         """
         self.p: int = polynomial.p
         """
@@ -32,6 +36,14 @@ class InteractiveVerifier:
 
         self.active: bool = True
         self.convinced: bool = False
+
+        # check soundness
+        if self.soundnessError() > maxAllowedSoundnessError:
+            raise SoundnessErrorException(f"Soundness error {self.soundnessError()} exceeds maximum "
+                                          f"allowed soundness error {maxAllowedSoundnessError}\n"
+                                          f"Try to have a prime "
+                                          f"with size "
+                                          f">= {self.requiredFieldLengthBit(maxAllowedSoundnessError) + 1} bits")
 
         # some edge case: if univariate or constant: no need to be interactive
         if polynomial.num_variables == 0:
@@ -65,6 +77,24 @@ class InteractiveVerifier:
         """
         The expected sum value at round i
         """
+
+    def soundnessError(self) -> float:
+        """
+        Get the soundness error according to the MVLinear and field size.
+        :return: The float representing the upper bound of probability of accepting when assertion is invalid.
+        """
+
+        n = self.poly.num_variables
+        return (n * n) / self.p
+
+    def requiredFieldLengthBit(self, e: float) -> int:
+        """
+        :param e: the maximum allowed soundness error
+        :return: The minimum size of prime required to meet the soundness error constraint.
+        """
+        n = self.poly.num_variables
+        minP = (n * n) / e
+        return math.ceil(math.log(minP, 2))
 
     def randomR(self) -> int:
         return self.rand.randint(0, self.p)
@@ -122,3 +152,7 @@ class InteractiveVerifier:
         """
         self.convinced = False
         self.active = False
+
+
+class SoundnessErrorException(Exception):
+    pass
