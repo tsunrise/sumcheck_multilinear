@@ -7,6 +7,8 @@ from typing import List
 from IPPMFVerifier import InteractivePMFVerifier
 from PMF import PMF
 
+MAX_SOUNDNESS_ERROR_ALLOWED = 2e-64
+
 
 def randomElement(poly: PMF, proverMessage: List[List[int]]) -> int:
     """
@@ -55,16 +57,17 @@ class Proof:
         self.prover_messge = proverMessage
 
 
-def verifyProof(theorem: Theorem, proof: Proof) -> bool:
-    v = PseudoRandomPMFVerifier(theorem.poly, theorem.asserted_sum)
+def verifyProof(theorem: Theorem, proof: Proof, maxAllowedSoundnessError: float = MAX_SOUNDNESS_ERROR_ALLOWED) -> bool:
+    v = PseudoRandomPMFVerifier(theorem.poly, theorem.asserted_sum, maxAllowedSoundnessError)
     for msg in proof.prover_messge:
         v.talk(msg)
     return v.convinced
 
 
 class PseudoRandomPMFVerifier(InteractivePMFVerifier):
-    def __init__(self, polynomial: PMF, asserted_sum: int):
-        super().__init__(0, polynomial, asserted_sum)
+    def __init__(self, polynomial: PMF, asserted_sum: int, maxAllowedSoundnessError=MAX_SOUNDNESS_ERROR_ALLOWED):
+        super().__init__(0, polynomial, asserted_sum, maxAllowedSoundnessError=maxAllowedSoundnessError /
+                                                                               (polynomial.num_variables + 1))
         self.proverMessages: List[List[int]] = []
         self.runtime = 0
         # for timing stat
@@ -79,5 +82,3 @@ class PseudoRandomPMFVerifier(InteractivePMFVerifier):
 
     def randomR(self) -> int:
         return randomElement(self.poly, self.proverMessages)
-
-

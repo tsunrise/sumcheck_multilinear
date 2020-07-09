@@ -13,7 +13,7 @@ class PMF:
         if len(multiplicands) == 0:
             raise ValueError("Multiplicands are empty.")
         self.num_variables = multiplicands[0].num_variables
-        self.p = multiplicands[0].p
+        self._p = multiplicands[0].p
         for poly in multiplicands:
             self.num_variables = max(self.num_variables, poly.num_variables)
             if poly.p != self.p:
@@ -30,6 +30,17 @@ class PMF:
             result = (result * poly.eval(at)) % self.p
 
         return result
+
+    # change field size
+    @property
+    def p(self):
+        return self._p
+
+    @p.setter
+    def p(self, x):
+        for poly in self.multiplicands:
+            poly.p = x
+        self._p = x
 
     def __call__(self, *args, **kwargs):
         return self.eval(list(args))

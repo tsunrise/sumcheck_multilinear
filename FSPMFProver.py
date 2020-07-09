@@ -4,8 +4,11 @@ from PMF import PMF
 from IPPMFProver import InteractivePMFProver
 from FSPMFVerifier import PseudoRandomPMFVerifier, Theorem, Proof
 
+MAX_SOUNDNESS_ERROR_ALLOWED = 2e-64
 
-def generateTheoremAndProof(poly: PMF) -> Tuple[Theorem, Proof, PseudoRandomPMFVerifier]:
+
+def generateTheoremAndProof(poly: PMF, maxAllowedSoundnessError=MAX_SOUNDNESS_ERROR_ALLOWED)\
+        -> Tuple[Theorem, Proof, PseudoRandomPMFVerifier]:
     """
     Generate the theorem (poly itself and the asserted sum) and its proof.
     :param poly: The PMF polynomial
@@ -14,7 +17,7 @@ def generateTheoremAndProof(poly: PMF) -> Tuple[Theorem, Proof, PseudoRandomPMFV
     pv = InteractivePMFProver(poly)
     As, s = pv.calculateAllBookKeepingTables()
 
-    v = PseudoRandomPMFVerifier(poly, s)
+    v = PseudoRandomPMFVerifier(poly, s, maxAllowedSoundnessError=maxAllowedSoundnessError)
     pv.attemptProve(As, v)
 
     theorem = Theorem(poly, s)
