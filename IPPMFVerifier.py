@@ -1,7 +1,10 @@
+import math
 from random import Random
 from typing import List, Tuple
 
 from PMF import PMF
+
+MAX_ALLOWED_SOUNDNESS_ERROR = 2e-64
 
 
 class InteractivePMFVerifier:
@@ -9,7 +12,8 @@ class InteractivePMFVerifier:
     An interactive verifier that verifies the sum of the polynomial which is the product of multilinear functions
     """
 
-    def __init__(self, seed: int, poly: PMF, asserted_sum: int):
+    def __init__(self, seed: int, poly: PMF, asserted_sum: int,
+                 maxAllowedSoundnessError: float = MAX_ALLOWED_SOUNDNESS_ERROR):
         self.p = poly.p
 
         self.poly = poly
@@ -19,6 +23,15 @@ class InteractivePMFVerifier:
 
         self.active: bool = True
         self.convinced: bool = False
+
+        # check soundness
+        if self.soundnessError() > maxAllowedSoundnessError:
+            raise SoundnessErrorException(f"Soundness error {self.soundnessError()} exceeds maximum "
+                                          f"allowed soundness error {maxAllowedSoundnessError}\n"
+                                          f"Try to have a prime "
+                                          f"with size "
+                                          f">= {self.requiredFieldLengthBit(maxAllowedSoundnessError)} bits")
+
 
         # some edge case: if univariate or constant: no need to be interactive
         if poly.num_variables == 0:
@@ -55,6 +68,22 @@ class InteractivePMFVerifier:
 
     def randomR(self) -> int:
         return self.rand.randint(0, self.p)
+
+    def soundnessError(self) -> float:
+        poly = self.poly
+        deg = poly.num_variables * poly.num_multiplicands()
+
+        return (self.poly.num_variables * deg) / self.p
+
+    def requiredFieldLengthBit(self, e: float) -> int:
+        """
+        :param e: the maximum allowed soundness error
+        :return: The minimum size of prime required to meet the soundness error constraint.
+        """
+        poly = self.poly
+        deg = poly.num_variables * poly.num_multiplicands()
+        minP = (self.poly.num_variables * deg) / e
+        return math.ceil(math.log(minP, 2))
 
     def talk(self, msgs: List[int]) -> Tuple[bool, int]:
         """
@@ -173,3 +202,6 @@ def interpolate(points: List[int], r: int, p: int):
         result = (result + term) % p
 
     return result
+
+class SoundnessErrorException(Exception):
+    pass

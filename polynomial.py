@@ -29,10 +29,14 @@ class MVLinear:
                 self.terms[k] = term[k] % self.p
 
     def __repr__(self):
+        limit = 8
         s = ""
         s += "MVLinear("
         for k in self.terms:
             s += " + "
+            if limit == 0:
+                s += "..."
+                break
             s += str(self.terms[k])
             if k != 0:
                 s += "*"
@@ -43,7 +47,7 @@ class MVLinear:
                     s += "x" + str(i)
                 i += 1
                 k >>= 1
-
+            limit -= 1
         s += ")"
         return s
 
@@ -185,9 +189,9 @@ def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, i
     return f
 
 
-def randomMVLinear(num_variables: int, field_size: int = 128) -> MVLinear:
+def randomMVLinear(num_variables: int, prime: int = 0, prime_bit_length: int = 128) -> MVLinear:
     num_terms = 2 ** num_variables
-    prime = randomPrime(field_size)
+    prime = randomPrime(prime_bit_length) if prime == 0 else prime
     m = makeMVLinearConstructor(num_variables, prime)
     d: Dict[int, int] = dict()
     for _ in range(num_terms):

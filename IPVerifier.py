@@ -43,7 +43,7 @@ class InteractiveVerifier:
                                           f"allowed soundness error {maxAllowedSoundnessError}\n"
                                           f"Try to have a prime "
                                           f"with size "
-                                          f">= {self.requiredFieldLengthBit(maxAllowedSoundnessError) + 1} bits")
+                                          f">= {self.requiredFieldLengthBit(maxAllowedSoundnessError)} bits")
 
         # some edge case: if univariate or constant: no need to be interactive
         if polynomial.num_variables == 0:
@@ -94,7 +94,7 @@ class InteractiveVerifier:
         """
         n = self.poly.num_variables
         minP = (n * n) / e
-        return math.ceil(math.log(minP, 2))
+        return math.ceil(math.log(minP, 2)) + 1
 
     def randomR(self) -> int:
         return self.rand.randint(0, self.p)
