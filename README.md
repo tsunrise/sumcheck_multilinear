@@ -144,6 +144,41 @@ v = InteractivePMFVerifier(randint(0xFFFFFFFF), p, s)
 pv.attemptProve(As, v)
 ```
 
+### Offline Version of the protocol
+Using Fiat-Shamir Transform, one can use a pseudorandom function to convert the interactive protocol offline. 
+Note that this protocol requires larger field size, as the soundness error for the offline version is larger. 
+In this implementation, the field size requirement is linear to number of rounds in interactive protocol, which is `number of variables + 1`.
+#### Offline sum-check for Multilinear Polynomial
+```python
+from polynomial import randomMVLinear, randomPrime
+from FSProver import generateTheoremAndProof
+from FSVerifier import verifyProof
+
+poly = randomMVLinear(12, randomPrime(32))  # generate a random 12-variable with 32-bit field size
+generateTheoremAndProof(poly, 2e-64)  # generate the proof and check if soundness error requirement is met
+# this is lead to an error
+# IPVerifier.SoundnessErrorException: Soundness error 5.036415256650313e-08 exceeds maximum allowed soundness error 1.6666666666666665e-65
+# Try to have a prime with size >= 224 bits
+
+poly = randomMVLinear(12, randomPrime(224))
+theorem,  proof = generateTheoremAndProof(poly, 2e-64)
+
+verifyProof(theorem, proof, 2e-64)  # this should return True
+``` 
+#### Offline sum-check for PMF
+```python
+from polynomial import randomMVLinear, randomPrime
+from PMF import PMF
+from FSPMFProver import generateTheoremAndProof
+from FSPMFVerifier import verifyProof
+
+prime = randomPrime(256)
+# create a random PMF with 10 variables and 10 multiplicands
+poly = PMF([randomMVLinear(10, prime) for _ in range(10)])
+
+theorem, proof, _ = generateTheoremAndProof(poly, 2e-64)
+verifyProof(theorem, proof, 2e-64)
+```
 
 ## Project Todo List
 ### Phase 1: Multilinear Polynomial
