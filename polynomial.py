@@ -146,11 +146,28 @@ class MVLinear:
 
         return s
 
+    def eval_bin(self, at: int) -> int:
+        """
+        Evaluate the polynomial where the arguments are in {0,1}. The ith argument is the ith bit of the polynomial.
+        :param at: polynomial argument in binary form
+        :return: polynomial evaluation
+        """
+        if at > 2 ** self.num_variables:
+            raise ArithmeticError("Number of variables is larger than expected")
+        args = [0 for _ in range(self.num_variables)]
+        for i in range(self.num_variables):
+            args[i] = at >> i & 1
+        return self.eval(args)
+
     def __call__(self, *args, **kwargs) -> int:
         if len(args) == 0:
             return self.eval([])
         if isinstance(args[0], list):
             return self.eval(args[0])
+        if isinstance(args[0], set):
+            if len(args[0]) != 1:
+                raise TypeError("Binary representation should have only one element. ")
+            return self.eval_bin(next(iter(args[0])))
         return self.eval(list(args))
 
     def latex(self):
@@ -174,6 +191,11 @@ class MVLinear:
         diff = self - other
         return len(diff.terms) == 0  # zero polynomial
 
+    def __getitem__(self, item):
+        if item in self.terms.keys():
+            return self.terms[item]
+        else:
+            return 0
 
 def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, int]], MVLinear]:
     """
