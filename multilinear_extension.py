@@ -16,16 +16,26 @@ def extend(data: List[int], fieldSize: int) -> MVLinear:
     gen = makeMVLinearConstructor(l, p)
     x = [gen({1 << i: 1}) for i in range(l)]  # predefine x_1, ..., x_l
 
-    poly = gen({0: 0})  # initialize poly = 0
+    poly_terms = {i: 0 for i in range(2**l)}
 
     for b in range(len(data)):
-        sub_poly = gen({0: data[b]})
-        for i in range(l):
-            bi = (b >> i) & 1
-            if bi == 1:
-                sub_poly *= x[i]
-            else:
-                sub_poly *= 1 - x[i]
-        poly += sub_poly
+        sub_poly = gen({b: data[b]})
+        xi0 = [x[i] for i in range(l) if b >> i & 1 == 0]
+        sub_poly *= _product1mx(xi0, 0, len(xi0)-1)
+        for t, v in sub_poly.terms.items():
+            poly_terms[t] += v
 
-    return poly
+    return gen(poly_terms)
+
+def _product1mx(xs: List[MVLinear], lo: int, hi: int):
+    """
+    Divide and conquer algorithm for calculating product of (1-xi)
+    """
+    if lo == hi:
+        return 1 - xs[lo]
+    if hi > lo:
+        L = _product1mx(xs, lo, lo + (hi - lo) // 2)
+        R = _product1mx(xs, lo + (hi - lo) // 2 + 1, hi)
+        return L * R
+    return 1
+
