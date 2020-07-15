@@ -27,6 +27,7 @@ def extend(data: List[int], fieldSize: int) -> MVLinear:
 
     return gen(poly_terms)
 
+
 def _product1mx(xs: List[MVLinear], lo: int, hi: int):
     """
     Divide and conquer algorithm for calculating product of (1-xi)
