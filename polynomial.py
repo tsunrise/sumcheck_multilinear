@@ -101,6 +101,9 @@ class MVLinear:
 
         return ans
 
+    def __neg__(self):
+        return 0 - self
+
     def __rsub__(self, other):
         if type(other) is int:
             other = MVLinear(self.num_variables, {0b0: other}, self.p)
@@ -196,6 +199,28 @@ class MVLinear:
             return self.terms[item]
         else:
             return 0
+
+    def eval_part(self, args: List[int]) -> 'MVLinear':
+        """
+        Evaluate part of the arguments of the multilinear polynomial.
+        :param args: the arguments at beginning
+        :return:
+        """
+        s = len(args)
+        if s > self.num_variables:
+            raise ValueError("len(args) > self.num_variables")
+        new_terms: Dict[int, int] = dict()
+        for t, v in self.terms.items():
+            for k in range(s):
+                if t & (1 << k) > 0:
+                    v = v * (args[k] % self.p) % self.p
+                    t = t & ~(1 << k)
+            t_shifted = t >> s
+            if t_shifted not in new_terms:
+                new_terms[t_shifted] = 0
+            new_terms[t_shifted] = (new_terms[t_shifted] + v) % self.p
+        return MVLinear(self.num_variables - len(args), new_terms, self.p)
+
 
 def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, int]], MVLinear]:
     """
