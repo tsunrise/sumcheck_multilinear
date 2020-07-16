@@ -13,9 +13,10 @@ class InteractivePMFVerifier:
     """
 
     def __init__(self, seed: int, poly: PMF, asserted_sum: int,
-                 maxAllowedSoundnessError: float = MAX_ALLOWED_SOUNDNESS_ERROR):
-        self.p = poly.p
+                 maxAllowedSoundnessError: float = MAX_ALLOWED_SOUNDNESS_ERROR, checksum_only: bool = False):
+        self.checksum_only: bool = checksum_only
 
+        self.p = poly.p
         self.poly = poly
         self.asserted_sum = asserted_sum % self.p
         self.rand: Random = Random()
@@ -118,12 +119,33 @@ class InteractivePMFVerifier:
             return True, r
 
         # final step: check all
+        if self.checksum_only:
+            """
+            When checksum_only is on, the verifier do not access the polynomial. It only 
+            verifies that the sum of a polynomial is correct. 
+            User often use this verifier as a subroutine, and uses self.subclaim() to get a sub-claim for
+            the polynomial. 
+            """
+            return True, 0
         final_sum = self.poly.eval(self.points)
         if pr != final_sum:
             self._reject_and_close()
             return False, 0
         self._convince_and_close()
         return True, 0
+
+    def sub_claim(self) -> Tuple[List[int], int]:
+        """
+        The verifier should already checks the sum of the polynomial. If the sum is indeed the sum of polynomial, then
+        the sub claim should be correct.
+        The sub claim is in the following form:
+        - one point of the polynomial
+        - the expected evaluation at this point
+        :return: Tuple[point: List[int], expected: int]
+        """
+        if not self.convinced:
+            raise ArithmeticError("The verifier is not convinced, and cannot make a sub claim.")
+        return self.points, self.expect
 
     def _convince_and_close(self):
         """
