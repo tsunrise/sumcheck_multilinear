@@ -221,6 +221,34 @@ class MVLinear:
             new_terms[t_shifted] = (new_terms[t_shifted] + v) % self.p
         return MVLinear(self.num_variables - len(args), new_terms, self.p)
 
+    def collapse_left(self, n: int) -> 'MVLinear':
+        """
+        Remove redundant unused variable from left.
+        :param n: number of variables to collpse
+        :return:
+        """
+        new_terms: Dict[int, int] = dict()
+        mask = (1 << n) - 1
+        for t, v in self.terms.items():
+            if t & mask > 0:
+                raise ArithmeticError("Cannot collapse: Variable exist. ")
+            new_terms[t >> n] = v
+        return MVLinear(self.num_variables - n, new_terms, self.p)
+
+    def collapse_right(self, n: int) -> 'MVLinear':
+        """
+        Remove redundant unused variable from right.
+        :param n: number of variables to collpse
+        :return:
+        """
+        new_terms: Dict[int, int] = dict()
+        mask = ((1 << n) - 1) << (self.num_variables - n)
+        anti_mask = (1 << (self.num_variables - n)) - 1
+        for t, v in self.terms.items():
+            if t & mask > 0:
+                raise ArithmeticError("Cannot collapse: Variable exist. ")
+            new_terms[t & anti_mask] = v
+        return MVLinear(self.num_variables - n, new_terms, self.p)
 
 def makeMVLinearConstructor(num_variables: int, p: int) -> Callable[[Dict[int, int]], MVLinear]:
     """
