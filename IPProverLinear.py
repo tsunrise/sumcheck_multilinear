@@ -15,7 +15,7 @@ def binaryToList(b: int, numVariables: int) -> List[int]:
     lst: List[int] = [0] * numVariables
     i = 0
     while b != 0:
-        lst[numVariables - i - 1] = b & 1
+        lst[i] = b & 1
         b >>= 1
         i += 1
     return lst
@@ -44,8 +44,8 @@ class InteractiveLinearProver:
             p0 = 0  # sum over P(fixed, 0, ...)
             p1 = 0  # sum over P(fixed, 1, ...)
             for b in range(2**(l-i)):
-                p0 = (p0 + A[b]) % self.p
-                p1 = (p1 + A[b + 2**(l-i)]) % self.p
+                p0 = (p0 + A[b << 1]) % self.p
+                p1 = (p1 + A[(b << 1) + 1]) % self.p
             if showDialog:
                 print(f"Round {i}: Prover Send P{i}(0) = {p0}, P{i}(1) = {p1}. "
                       f"P{i}(0) + P{i}(1) = {(p0 + p1) % self.p}")
@@ -57,7 +57,7 @@ class InteractiveLinearProver:
             if showDialog and verifier.active:
                 print(f"Verifier expects P{i+1}(0) + P{i+1}(1) to be P{i}({r}) = {verifier.expect}")
             for b in range(2**(l-i)):
-                A[b] = (A[b] * (1 - r) + A[b + 2**(l - i)] * r) % self.p
+                A[b] = (A[b << 1] * (1 - r) + A[(b << 1) + 1] * r) % self.p
 
         return vT
 

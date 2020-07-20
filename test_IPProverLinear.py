@@ -4,19 +4,20 @@ from unittest import TestCase
 import time
 from IPProverLinear import InteractiveLinearProver
 from IPVerifier import InteractiveVerifier
-from polynomial import makeMVLinearConstructor
+from polynomial import makeMVLinearConstructor, randomPrime
 
 
 class TestInteractiveLinearProver(TestCase):
     def testFunctionality(self):
-        m = makeMVLinearConstructor(4, 47)
+        P = randomPrime(37)
+        m = makeMVLinearConstructor(4, P)
         x0 = m({1: 1})
         x1 = m({1 << 1: 1})
         x2 = m({1 << 2: 1})
         x3 = m({1 << 3: 1})
 
-        p = random.randint(0, 46) * x0 + random.randint(0, 46) * x1 + random.randint(0, 46) * x2 + \
-            random.randint(0, 46) * x3
+        p = random.randint(0, P-1) * x0 + random.randint(0, P-1) * x1 + random.randint(0, P-1) * x2 + \
+            random.randint(0, P-1) * x3
         print("Testing Polynomial: " + str(p))
 
         pv = InteractiveLinearProver(p)
