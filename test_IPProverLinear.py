@@ -30,12 +30,13 @@ class TestInteractiveLinearProver(TestCase):
 
     def testBenchMark(self):
         num_variables = 12
-        num_terms = 2**12
-        m = makeMVLinearConstructor(num_variables, 199)
+        num_terms = 2**11
+        P = randomPrime(41)
+        m = makeMVLinearConstructor(num_variables, P)
 
         d: Dict[int, int] = dict()
         for _ in range(num_terms):
-            d[random.randint(0, 2**num_variables - 1)] = random.randint(0, 198)
+            d[random.randint(0, 2**num_variables - 1)] = random.randint(0, P-1)
 
         p = m(d)
         pv = InteractiveLinearProver(p)
