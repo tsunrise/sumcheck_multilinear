@@ -13,7 +13,7 @@ def binaryToList(b: int, numVariables: int) -> List[int]:
     lst: List[int] = [0] * numVariables
     i = 0
     while b != 0:
-        lst[numVariables - i - 1] = b & 1
+        lst[i] = b & 1
         b >>= 1
         i += 1
     return lst
@@ -45,7 +45,7 @@ class InteractivePMFProver:
                     for j in range(self.poly.num_multiplicands()):  # iterate over multiplicands to multiply
                         A = As[j]
                         product = product * (
-                                ((A[b] * ((1 - t) % self.p)) + (A[b + 2 ** (l - i)] * t) % self.p) % self.p) % self.p
+                                ((A[b << 1] * ((1 - t) % self.p)) + (A[(b << 1) + 1] * t) % self.p) % self.p) % self.p
                     products_sum[t] = (products_sum[t] + product) % self.p
 
             result, r = verifier.talk(products_sum)
@@ -53,7 +53,7 @@ class InteractivePMFProver:
             assert result
             for j in range(self.poly.num_multiplicands()):
                 for b in range(2**(l-i)):
-                    As[j][b] = (As[j][b] * (1 - r) + As[j][b + 2**(l - i)] * r) % self.p
+                    As[j][b] = (As[j][b << 1] * (1 - r) + As[j][(b << 1) + 1] * r) % self.p
 
 
 
