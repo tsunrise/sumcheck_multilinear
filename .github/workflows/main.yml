@@ -23,6 +23,10 @@ jobs:
     - uses: actions/checkout@v2
 
     # Runs a single command using the runners shell
+    - name: Import Library
+      run: pip3 install IPython
+      
+    # Runs a single command using the runners shell
     - name: Unit Testing
       run: python3 -m unittest
 
