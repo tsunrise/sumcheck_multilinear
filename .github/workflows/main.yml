@@ -24,7 +24,9 @@ jobs:
 
     # Runs a single command using the runners shell
     - name: Import Library
-      run: pip3 install IPython
+      run: |
+            pip3 install IPython
+            pip3 install Crypto
       
     # Runs a single command using the runners shell
     - name: Unit Testing
