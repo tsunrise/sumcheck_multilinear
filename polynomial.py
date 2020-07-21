@@ -20,9 +20,11 @@ class MVLinear:
         self.num_variables = num_variables
         self.terms: Dict[int, int] = dict()
         self.p = p
-        for k in term:
+        for k,v in term.items():
             if k >> self.num_variables > 0:
                 raise ValueError("Term is out of range.")
+            if v % p == 0:
+                continue
             if k in self.terms:
                 self.terms[k] = (self.terms[k] + term[k]) % self.p
             else:
