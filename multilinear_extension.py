@@ -28,15 +28,15 @@ def extend(data: List[int], fieldSize: int) -> MVLinear:
     return gen(poly_terms)
 
 
-def extend_sparse(data: Dict[int, int], L: int, fieldSize: int) -> MVLinear:
+def extend_sparse(data: Dict[int, int], num_var: int, fieldSize: int) -> MVLinear:
     """
     Convert an sparse map to a polynomial where the argument is the binary form of index.
     :param data: sparse map if index<2^L. If the size of array is not power of 2, out-of-range part will be arbitrary.
-    :param L: number of variables
+    :param num_var: number of variables
     :param fieldSize: The size of finite field that the array value belongs.
     :return: The result MVLinear P(x1, x2, ..., xl) = Arr[0bxl...x1]
     """
-    l: int = L
+    l: int = num_var
     p = fieldSize
     gen = makeMVLinearConstructor(l, p)
     x = [gen({1 << i: 1}) for i in range(l)]  # predefine x_1, ..., x_l
