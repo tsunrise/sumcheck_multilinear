@@ -2,7 +2,7 @@ import random
 from typing import Dict
 from unittest import TestCase
 
-from multilinear_extension import extend
+from multilinear_extension import extend_sparse
 from GKRProver import binaryToList, initialize_PhaseOne, calculateBookKeepingTable
 from polynomial import randomPrime, randomMVLinear
 from IPPMFProver import PMF, InteractivePMFProver
@@ -20,7 +20,7 @@ def generateRandomF1(L: int, p: int) -> Dict[int, int]:
 
 class Test(TestCase):
     def test_initialize_phase_one(self):
-        L = 3
+        L = 5
         p = randomPrime(64)
         # generate random sparse f1, random f3, g
         D_f1 = generateRandomF1(L, p)
@@ -32,7 +32,7 @@ class Test(TestCase):
         A_f1 = [0] * (1 << (3 * L))
         for k, v in D_f1.items():
             A_f1[k] = v
-        f1 = extend(A_f1, p)
+        f1 = extend_sparse(D_f1, 3*L, p)
 
         f1_fix_g = f1.eval_part(g)
         self.assertEqual(f1_fix_g.num_variables, 2*L)
