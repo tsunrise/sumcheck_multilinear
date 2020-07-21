@@ -1,4 +1,5 @@
-# Sumcheck protocol for Multilinear polynomials ![unit test](https://github.com/tsunrise/sumcheck_multilinear/workflows/unit%20test/badge.svg)
+# Sumcheck protocol for Multilinear polynomials 
+![unit test](https://github.com/tsunrise/sumcheck_multilinear/workflows/unit%20test/badge.svg)<br>
 A python implementation of sumcheck protocol for multilinear polynomial and product of multilinear polynomials (PMF). Sumcheck protocol is useful in interactive proofs (IP). 
 
 ## Getting Started
