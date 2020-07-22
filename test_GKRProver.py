@@ -1,11 +1,10 @@
 import random
-from typing import Dict
+from typing import Dict, Tuple, List
 from unittest import TestCase
 
 from multilinear_extension import extend_sparse
-from GKRProver import binaryToList, initialize_PhaseOne, calculateBookKeepingTable
-from polynomial import randomPrime, randomMVLinear
-from IPPMFProver import PMF, InteractivePMFProver
+from GKRProver import binaryToList, initialize_PhaseOne, initialize_PhaseTwo
+from polynomial import randomPrime, randomMVLinear, MVLinear
 
 
 def generateRandomF1(L: int, p: int) -> Dict[int, int]:
@@ -19,9 +18,10 @@ def generateRandomF1(L: int, p: int) -> Dict[int, int]:
 
 
 class Test(TestCase):
-    def test_initialize_phase_one(self):
+    def test_initialize_phase_one_two(self):
         L = 5
         p = randomPrime(64)
+        print(f"Testing GKR Prover Bookkeeping table generator functions... Use L = {L}, p = {p}")
         # generate random sparse f1, random f3, g
         D_f1 = generateRandomF1(L, p)
         f3 = randomMVLinear(L, prime=p)
@@ -43,8 +43,35 @@ class Test(TestCase):
             y = (i & (((1 << L) - 1) << L)) >> L
             A_hg_expected[x] = (A_hg_expected[x] + f1_fix_g.eval_bin(i) * A_f3[y]) % p
 
-        A_hg_actual = initialize_PhaseOne(D_f1, L, p, A_f3, g)
+        A_hg_actual, G = initialize_PhaseOne(D_f1, L, p, A_f3, g)
         for i in range(1 << L):
             self.assertEqual(A_hg_expected[i] % p, A_hg_actual[i] % p)
+        print("PASS: initialize_PhaseOne")
+        # phase 2
+        u = [random.randint(0, p-1) for _ in range(L)]
+        f1_fix_gu = f1_fix_g.eval_part(u)
+        self.assertEqual(f1_fix_gu.num_variables, L)
 
+        A_f1_expected = [0] * (1 << L)
+        for i in range(1 << L):
+            y = i & ((1 << L) - 1)
+            A_f1_expected[y] = f1_fix_gu.eval_bin(y)
 
+        A_f1_actual = initialize_PhaseTwo(D_f1, G, u, p)
+        for i in range(1 << L):
+            self.assertEqual(A_f1_expected[i] % p, A_f1_actual[i] % p)
+        print("PASS: initialize_PhaseTwo")
+
+def calculateBookKeepingTable(poly: MVLinear) -> Tuple[List[int], int]:
+    """
+    :return: A bookkeeping table where the index is the binary form of argument of polynomial and value is the
+    evaluated value; the sum
+    """
+    P = poly.p
+    A: List[int] = [0] * (2 ** poly.num_variables)
+    s = 0
+    for p in range(2 ** poly.num_variables):
+        A[p] = poly.eval(binaryToList(p, poly.num_variables))
+        s = (s + A[p]) % P
+
+    return A, s
