@@ -1,42 +1,31 @@
 from copy import copy
-from typing import List
+from typing import List, Dict
 
 from PMF import PMF
-from polynomial import MVLinear
 
 
 class GKR:
-    def __init__(self, f1: MVLinear, f2: MVLinear, f3: MVLinear):
-        if not (f1.p == f2.p and f2.p == f3.p):
-            raise ArithmeticError("Field Size Mismatch")
-
-        if not (f1.num_variables != 3 * f2.num_variables) and (f1.num_variables != 3 * f3.num_variables):
-            raise ArithmeticError("Expect: (f1.num_variables != 3 * f2.num_variables) "
-                                  "and (f1.num_variables != 3 * f3.num_variables)")
-
-        self.f1 = f1
-        self.f2 = f2
-        self.f3 = f3
-
-        self.L = f2.num_variables  #  means "l" in paper
-
-    def to_naive_product(self, g: List[int]) -> PMF:
+    def __init__(self, f1: Dict[int, int], f2: List[int], f3: List[int], p: int, L: int):
         """
-        Fix g and convert the GKR to the product of three multilinear function of 2l variables.
-        :param g: first l variables of f1 (being fixed)
-        :return PMF
+        :param f1: Sparse polynomial f1(g,x,y) represented by a map of argument and its evaluation. Argument is little
+        endian binary form. For example, 0b10111 means f(1,1,1,0,1)
+        :param f2: Dense polynomial represented by a map of argument (index) and its evaluation (value).
+        :param f3: Dense polynomial represented by a map of argument (index) and its evaluation (value).
+        :param p: field size
+        :param L: number of variables in f2 and f3
         """
+        assert len(f2) == (1 << L), "f2(x) should have size 2^L"
+        assert len(f3) == (1 << L), "f3(y) should have size 2^L"
 
-        f1 = self.f1.eval_part(g)
+        for k in f1.keys():
+            if k >= (1 << (3*L)):
+                raise ArithmeticError(f"f1 has invalid term {bin(k)} cannot be represented by {3*L} variables. ")
 
-        f2 = copy(self.f2)
-        f2.num_variables *= 2
+        self.f1 = f1.copy()
+        self.f2 = f2.copy()
+        self.f3 = f3.copy()
 
-        f3 = copy(self.f3)
-        f3.num_variables *= 2
-        old_keys = list(f3.terms.keys())
-        for k in old_keys:
-            f3.terms[k << self.L] = f3.terms.pop(k)
+        self.L = L   # means "l" in paper
+        self.p = p
 
-        return PMF([f1, f2, f3])
 

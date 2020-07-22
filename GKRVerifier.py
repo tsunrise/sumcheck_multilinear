@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 from GKR import GKR
 from IPPMFVerifier import InteractivePMFVerifier
 from PMF import PMF, MVLinear
-
+from multilinear_extension import evaluate, evaluate_sparse
 
 class GKRVerifierState(Enum):
     PHASE_ONE_LISTENING = 1   # verify on x (L variables)
@@ -20,11 +20,12 @@ class GKRVerifier:
     """
     def __init__(self, gkr: GKR, g: List[int], asserted_sum: int):
         self.state: GKRVerifierState = GKRVerifierState.PHASE_ONE_LISTENING
-        assert len(g) == gkr.f2.num_variables
-        self.f1 = gkr.f1.eval_part(g)   # f1(x,y) = gkr.f1(g, x, y)
+        assert len(g) == gkr.L, "g should have same size as number of variables in f2 or f3"
+        self.f1 = gkr.f1
         self.f2 = gkr.f2
         self.f3 = gkr.f3
-        self.p = self.f1.p
+        self.g = g
+        self.p = gkr.p
         L = self.f2.num_variables
         self.L = L
         self.asserted_sum = asserted_sum
@@ -32,7 +33,7 @@ class GKRVerifier:
         # we put dummy polynomial here because the subroutine verifier does not evaluate h_g and f2: it just check the
         # sum.
         self.phase1_verifier: InteractivePMFVerifier = InteractivePMFVerifier(random.randint(1, 0xFFFFFFFFFFFFFFFF),
-                                                      PMF([MVLinear(2*L, {0:0}, self.p), MVLinear(L, {0:0}, self.p)]),
+                                                      PMF([MVLinear(2*L, {0: 0}, self.p), MVLinear(L, {0: 0}, self.p)]),
                                                       asserted_sum=asserted_sum, checksum_only=True)
         # phase 1 verifier generate sub claim u and its evaluation of product of h_g and f2 on x = u
 
@@ -49,8 +50,8 @@ class GKRVerifier:
         if self.phase1_verifier.convinced:
             L = self.L
             self.phase2_verifier = InteractivePMFVerifier(random.randint(1, 0xFFFFFFFFFFFFFFFF),
-                                                          PMF([MVLinear(L, {0:0}, self.p),
-                                                               MVLinear(L, {0:0}, self.p)]),
+                                                          PMF([MVLinear(L, {0: 0}, self.p),
+                                                               MVLinear(L, {0: 0}, self.p)]),  # dummy
                                                           asserted_sum=self.phase1_verifier.sub_claim()[1],
                                                           checksum_only=True)
             self.state = GKRVerifierState.PHASE_TWO_LISTENING
@@ -65,13 +66,13 @@ class GKRVerifier:
             raise RuntimeError("Verifier is not in phase 2.")
         _, r = self.phase2_verifier.talk(msgs)
         if self.phase2_verifier.convinced:
-            return self.verdict(), r
+            return self._verdict(), r
         if (not self.phase2_verifier.active) and (not self.phase2_verifier.convinced):
             self.state = GKRVerifierState.REJECT
             return False, r
         return True, r
 
-    def verdict(self) -> bool:
+    def _verdict(self) -> bool:
         """
         Verify the sub claim of verifier 2, using the u from sub claim 1 and v from sub claim 2.
         This requires three polynomial evaluation.
@@ -81,12 +82,14 @@ class GKRVerifier:
             raise RuntimeError("Verifier is not in phase 2.")
         if not self.phase2_verifier.convinced:
             raise RuntimeError("Phase 2 verifier is not convinced.")
-        u = self.phase1_verifier.sub_claim()[0]
-        v = self.phase2_verifier.sub_claim()[0]
+        u = self.phase1_verifier.sub_claim()[0]     # x
+        v = self.phase2_verifier.sub_claim()[0]     # y
 
         # verify phase 2 verifier's claim
-        m1 = self.f1.eval(u+v)
-        m2 = self.f3.eval(v) * self.f2.eval(u) % self.p
+        m1 = evaluate_sparse(self.f1, self.g+u+v, self.p)       # self.f1.eval(u+v)
+        m2 = evaluate(self.f3, v, self.p) * evaluate(self.f2, u, self.p) % self.p
+        # self.f3.eval(v) * self.f2.eval(u) % self.p
+
         expected = m1*m2 % self.p
 
         if (self.phase2_verifier.sub_claim()[1] - expected) % self.p != 0:
