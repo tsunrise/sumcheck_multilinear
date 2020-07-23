@@ -33,7 +33,7 @@ class GKRVerifier:
         # we put dummy polynomial here because the subroutine verifier does not evaluate h_g and f2: it just check the
         # sum.
         self.phase1_verifier: InteractivePMFVerifier = InteractivePMFVerifier(random.randint(1, 0xFFFFFFFFFFFFFFFF),
-                                                      PMF([MVLinear(2*L, {0: 0}, self.p), MVLinear(L, {0: 0}, self.p)]),
+                                                      PMF([MVLinear(L, {0: 0}, self.p), MVLinear(L, {0: 0}, self.p)]),
                                                       asserted_sum=asserted_sum, checksum_only=True)
         # phase 1 verifier generate sub claim u and its evaluation of product of h_g and f2 on x = u
 
@@ -98,4 +98,12 @@ class GKRVerifier:
         self.state = GKRVerifierState.ACCEPT
         return True
 
+    def get_randomness_u(self) -> List[int]:
+        if self.state == GKRVerifierState.PHASE_ONE_LISTENING or self.state == GKRVerifierState.REJECT:
+            raise RuntimeError("Not in correct phase. ")
+        return self.phase1_verifier.points.copy()
 
+    def get_randomness_v(self) -> List[int]:
+        if self.state !=GKRVerifierState.ACCEPT:
+            raise RuntimeError("Not in correct phase. ")
+        return self.phase2_verifier.points.copy()
