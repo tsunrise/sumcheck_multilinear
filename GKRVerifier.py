@@ -26,7 +26,7 @@ class GKRVerifier:
         self.f3 = gkr.f3
         self.g = g
         self.p = gkr.p
-        L = self.f2.num_variables
+        L = gkr.L
         self.L = L
         self.asserted_sum = asserted_sum
         # Phase 1 verifier: product of h_g (no need for verifier to multiply) and f2 (no need to access)
