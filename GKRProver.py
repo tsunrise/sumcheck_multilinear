@@ -1,6 +1,7 @@
 from typing import List, Tuple, Dict
 
-from polynomial import MVLinear
+from GKR import GKR
+from GKRVerifier import GKRVerifier, GKRVerifierState
 
 
 def binaryToList(b: int, numVariables: int) -> List[int]:
@@ -75,6 +76,22 @@ def initialize_PhaseOne(f1: Dict[int, int], L: int, p: int, A_f3: List[int], g: 
     return A_hg, G
 
 
+def sumOfGKR(A_hg: List[int], f2: List[int], p: int) -> int:
+    """
+    Calculate the sum of the GKR.
+
+    :param A_hg:
+    :param f2:
+    :param p: field size
+    :return: Sum of GKR
+    """
+
+    assert len(A_hg) == len(f2)
+    s = 0
+    for i in range(len(A_hg)):
+        s = (s + A_hg[i] * f2[i]) % p
+    return s
+
 def initialize_PhaseTwo(f1: Dict[int, int], G: List[int], u: List[int], p: int) -> List[int]:
     """
     (paper p16) phase two
@@ -94,6 +111,44 @@ def initialize_PhaseTwo(f1: Dict[int, int], G: List[int], u: List[int], p: int) 
         z, x, y = _three_split(arg, L)
         A_f1[y] = (A_f1[y] + G[z]*U[x]*ev) % p
     return A_f1
+
+
+def talkToVerifierPhase1(A_hg: List[int], gkr: GKR, verifier: GKRVerifier) -> List[int]:
+    """
+    Attempt to prove to GKR verifier.
+
+    :param A_hg: Bookkeeping table of hg. This list will be modified in place so do not reuse it.
+    :param gkr: The GKR function
+    :return: randomness
+    """
+    # sanity check
+    L = gkr.L
+    p = gkr.p
+    assert verifier.state == GKRVerifierState.PHASE_ONE_LISTENING, "Verifier is not in phase one. "
+    assert len(A_hg) == (1 << L), "Mismatch A_hg size and L"
+    assert len(gkr.f2) == (1 << L), "Mismatch f2 size and L"
+
+    num_multiplicands = 2
+    As: Tuple[List[int], List[int]] = (A_hg, gkr.f2)
+    for i in range(1, L+1):
+        product_sum: List[int] = [0] * (num_multiplicands + 1)
+        for b in range(1 << (L - i)):
+            for t in range(num_multiplicands + 1):
+                product = 1
+                for j in range(num_multiplicands):
+                    A = As[j]
+                    product = product * (
+                            ((A[b << 1] * ((1 - t) % p)) + (A[(b << 1) + 1] * t) % p) % p) % p
+                product_sum[t] = (product_sum[t] + product) % p
+
+        result, r = verifier.talk_phase1(product_sum)
+
+        assert result
+        for j in range(num_multiplicands):
+            for b in range(1 << (L-i)):
+                As[j][b] = (As[j][b << 1] * (1 - r) + As[j][(b << 1) + 1] * r) % p
+
+    return verifier.get_randomness_u()
 
 
 
