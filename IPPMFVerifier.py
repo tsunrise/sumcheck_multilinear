@@ -127,13 +127,13 @@ class InteractivePMFVerifier:
             the polynomial. 
             """
             self._convince_and_close()
-            return True, 0
+            return True, r
         final_sum = self.poly.eval(self.points)
         if pr != final_sum:
             self._reject_and_close()
-            return False, 0
+            return False, r
         self._convince_and_close()
-        return True, 0
+        return True, r
 
     def sub_claim(self) -> Tuple[List[int], int]:
         """
