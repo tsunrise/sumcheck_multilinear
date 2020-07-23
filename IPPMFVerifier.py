@@ -126,6 +126,7 @@ class InteractivePMFVerifier:
             User often use this verifier as a subroutine, and uses self.subclaim() to get a sub-claim for
             the polynomial. 
             """
+            self._convince_and_close()
             return True, 0
         final_sum = self.poly.eval(self.points)
         if pr != final_sum:
