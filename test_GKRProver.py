@@ -2,10 +2,12 @@ import random
 from typing import Dict, Tuple, List
 from unittest import TestCase
 
-from multilinear_extension import extend_sparse
-from GKRProver import binaryToList, initialize_PhaseOne, initialize_PhaseTwo
+from GKR import GKR
+from multilinear_extension import extend_sparse, evaluate
+from GKRProver import binaryToList, initialize_PhaseOne, initialize_PhaseTwo, sumOfGKR, talkToVerifierPhase1, \
+    talk_to_verifier_phase2
 from polynomial import randomPrime, randomMVLinear, MVLinear
-
+from GKRVerifier import GKRVerifier, GKRVerifierState
 
 def generateRandomF1(L: int, p: int) -> Dict[int, int]:
     n = round(((1 << (3*L))**0.5))
@@ -16,6 +18,12 @@ def generateRandomF1(L: int, p: int) -> Dict[int, int]:
         ans[term] = ev
     return ans
 
+def randomGKR(L: int, p: int) -> GKR:
+    f1 = generateRandomF1(L, p)
+    f2 = [random.randint(0, p-1) for _ in range(1 << L)]
+    f3 = [random.randint(0, p-1) for _ in range(1 << L)]
+
+    return GKR(f1, f2, f3, p, L)
 
 class Test(TestCase):
     def test_initialize_phase_one_two(self):
@@ -61,6 +69,30 @@ class Test(TestCase):
         for i in range(1 << L):
             self.assertEqual(A_f1_expected[i] % p, A_f1_actual[i] % p)
         print("PASS: initialize_PhaseTwo")
+
+    def test_completeness_sanity(self):
+        print(f"Test Completeness of GKR protocol (test individual functions)")
+        L = 7
+        p = randomPrime(256)
+        gkr = randomGKR(L, p)
+        g = [random.randint(0, p-1) for _ in range(L)]
+
+        A_hg, G = initialize_PhaseOne(gkr.f1, L, p, gkr.f3, g)
+        s = sumOfGKR(A_hg, gkr.f2, p)
+        v = GKRVerifier(gkr, g, s)
+        self.assertEqual(v.state, GKRVerifierState.PHASE_ONE_LISTENING, "wrong verifier state")
+
+        u, f2u = talkToVerifierPhase1(A_hg, gkr, v)
+        self.assertEqual(len(u), L, "wrong randomness size")
+        self.assertEqual(v.state, GKRVerifierState.PHASE_TWO_LISTENING, "verifier should be in phase two")
+        self.assertEqual(f2u % p, evaluate(gkr.f2, u, p) % p, "f2(u) returned by talkToVerifierPhase1 is incorrect")
+
+        print(f"initialize_PhaseOne, sumOfGKR, talkToVerifierPhase1 looks good. ")
+        A_f1 = initialize_PhaseTwo(gkr.f1, G, u, p)
+        talk_to_verifier_phase2(A_f1, gkr, f2u, v)
+        self.assertEqual(v.state, GKRVerifierState.ACCEPT, "Verifier does not accept this proof. ")
+        print(f"initialize_PhaseTwo, talk_to_verifier_phase2 looks good. ")
+        print(f"Completeness test PASS!")
 
 def calculateBookKeepingTable(poly: MVLinear) -> Tuple[List[int], int]:
     """

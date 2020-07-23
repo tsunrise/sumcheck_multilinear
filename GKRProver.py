@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Callable
 
 from GKR import GKR
 from GKRVerifier import GKRVerifier, GKRVerifierState
@@ -113,23 +113,8 @@ def initialize_PhaseTwo(f1: Dict[int, int], G: List[int], u: List[int], p: int) 
     return A_f1
 
 
-def talkToVerifierPhase1(A_hg: List[int], gkr: GKR, verifier: GKRVerifier) -> Tuple[List[int], int]:
-    """
-    Attempt to prove to GKR verifier.
-
-    :param A_hg: Bookkeeping table of hg.
-    :param gkr: The GKR function
-    :return: randomness, f2(u)
-    """
-    # sanity check
-    L = gkr.L
-    p = gkr.p
-    assert verifier.state == GKRVerifierState.PHASE_ONE_LISTENING, "Verifier is not in phase one. "
-    assert len(A_hg) == (1 << L), "Mismatch A_hg size and L"
-    assert len(gkr.f2) == (1 << L), "Mismatch f2 size and L"
-
+def _talk_process(As: Tuple[List[int], List[int]], L: int, p: int, talker: Callable[[List[int]], Tuple[bool, int]]):
     num_multiplicands = 2
-    As: Tuple[List[int], List[int]] = (A_hg.copy(), gkr.f2.copy())
     for i in range(1, L+1):
         product_sum: List[int] = [0] * (num_multiplicands + 1)
         for b in range(1 << (L - i)):
@@ -141,16 +126,44 @@ def talkToVerifierPhase1(A_hg: List[int], gkr: GKR, verifier: GKRVerifier) -> Tu
                             ((A[b << 1] * ((1 - t) % p)) + (A[(b << 1) + 1] * t) % p) % p) % p
                 product_sum[t] = (product_sum[t] + product) % p
 
-        result, r = verifier.talk_phase1(product_sum)
+        result, r = talker(product_sum)
 
         assert result
         for j in range(num_multiplicands):
             for b in range(1 << (L-i)):
                 As[j][b] = (As[j][b << 1] * (1 - r) + As[j][(b << 1) + 1] * r) % p
 
+def talkToVerifierPhase1(A_hg: List[int], gkr: GKR, verifier: GKRVerifier) -> Tuple[List[int], int]:
+    """
+    Attempt to prove to GKR verifier.
+
+    :param A_hg: Bookkeeping table of hg. A_hg will be modified in-place. Do not reuse it!
+    :param gkr: The GKR function
+    :return: randomness, f2(u)
+    """
+    # sanity check
+    L = gkr.L
+    p = gkr.p
+    assert verifier.state == GKRVerifierState.PHASE_ONE_LISTENING, "Verifier is not in phase one. "
+    assert len(A_hg) == (1 << L), "Mismatch A_hg size and L"
+
+    As: Tuple[List[int], List[int]] = (A_hg, gkr.f2.copy())
+    _talk_process(As, L, p, verifier.talk_phase1)
+
     return verifier.get_randomness_u(), As[1][0]
 
-# def talk_to_verifier_phase2(A_f1: List[int], )
+
+def talk_to_verifier_phase2(A_f1: List[int], gkr: GKR, f2u: int, verifier: GKRVerifier) -> None:
+    L = gkr.L
+    p = gkr.p
+    A_f3_f2u = [(x * f2u) % p for x in gkr.f3]
+
+    assert verifier.state == GKRVerifierState.PHASE_TWO_LISTENING, "Verifier is not in phase two. "
+    assert len(A_f1) == (1 << L), "Mismatch A_f1 size and L"
+
+    As: Tuple[List[int], List[int]] = (A_f1, A_f3_f2u)
+    _talk_process(As, L, p, verifier.talk_phase2)
+
 
 
 
