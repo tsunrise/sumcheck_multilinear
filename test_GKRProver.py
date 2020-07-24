@@ -5,7 +5,7 @@ from unittest import TestCase
 from GKR import GKR
 from multilinear_extension import extend_sparse, evaluate
 from GKRProver import binaryToList, initialize_PhaseOne, initialize_PhaseTwo, sumOfGKR, talkToVerifierPhase1, \
-    talk_to_verifier_phase2
+    talk_to_verifier_phase2, GKRProver
 from polynomial import randomPrime, randomMVLinear, MVLinear
 from GKRVerifier import GKRVerifier, GKRVerifierState
 
@@ -93,6 +93,28 @@ class Test(TestCase):
         self.assertEqual(v.state, GKRVerifierState.ACCEPT, "Verifier does not accept this proof. ")
         print(f"initialize_PhaseTwo, talk_to_verifier_phase2 looks good. ")
         print(f"Completeness test PASS!")
+
+    def test_protocol_comprehensive(self):
+        NUM_TESTS = 10
+        Ls = list(range(10,13))
+        print(f"Performing GKR interactive protocol comprehensive test...")
+        for i in range(NUM_TESTS):
+            p = randomPrime(256)
+            L = Ls[i % len(Ls)]
+            print(f"test #{i+1}: |g|=|x|=|y| = {L}: TESTING", end="", flush=True)
+            gkr = randomGKR(L, p)
+            g = [random.randint(0, p-1) for _ in range(L)]
+
+            pv = GKRProver(gkr)
+            A_hg, G, s = pv.initializeAndGetSum(g)
+
+            v = GKRVerifier(gkr, g, s)
+            assert v.state == GKRVerifierState.PHASE_ONE_LISTENING, "Verifier sanity check failed"
+            pv.proveToVerifier(A_hg, G, s, v)
+
+            self.assertEqual(v.state, GKRVerifierState.ACCEPT)
+            print(f"\b\b\b\b\b\b\bPASS")
+        print(f"All GKR interactive protocol comprehensive tests passed! ")
 
 def calculateBookKeepingTable(poly: MVLinear) -> Tuple[List[int], int]:
     """

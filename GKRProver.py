@@ -165,8 +165,35 @@ def talk_to_verifier_phase2(A_f1: List[int], gkr: GKR, f2u: int, verifier: GKRVe
     _talk_process(As, L, p, verifier.talk_phase2)
 
 
+class GKRProver:
+    def __init__(self, gkr: GKR):
+        self.gkr = gkr
 
+    def initializeAndGetSum(self, g: List[int]) -> Tuple[List[int], List[int], int]:
+        """
+        :param g: fixed g
+        :return: Bookkeeping table h_g, G: precompute cache, sum
+        """
+        assert len(g) == self.gkr.L, "Size of g is incorrect"
+        A_hg, G = initialize_PhaseOne(self.gkr.f1, self.gkr.L, self.gkr.p, self.gkr.f3, g)
+        s = sumOfGKR(A_hg, self.gkr.f2, self.gkr.p)
+        return A_hg, G, s
 
+    def proveToVerifier(self, A_hg: List[int], G: List[int], s: int, verifier: GKRVerifier) -> None:
+        """
 
+        :param A_hg: bookkeeping table h_g
+        :param G: precompute cache
+        :param s: sum
+        :param verifier: GKR verifier
+        """
+
+        assert verifier.asserted_sum == s, "Asserted sum mismatch"
+
+        u, f2u = talkToVerifierPhase1(A_hg, self.gkr, verifier)
+        assert verifier.state == GKRVerifierState.PHASE_TWO_LISTENING, "Verifier does not accept phase 1 proof"
+
+        A_f1 = initialize_PhaseTwo(self.gkr.f1, G, u, self.gkr.p)
+        talk_to_verifier_phase2(A_f1, self.gkr, f2u, verifier)
 
 
