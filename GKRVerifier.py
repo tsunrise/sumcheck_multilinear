@@ -4,12 +4,13 @@ from typing import List, Optional, Tuple
 
 from GKR import GKR
 from IPPMFVerifier import InteractivePMFVerifier
-from PMF import PMF, MVLinear
+from PMF import DummyPMF, MVLinear
 from multilinear_extension import evaluate, evaluate_sparse
 
+
 class GKRVerifierState(Enum):
-    PHASE_ONE_LISTENING = 1   # verify on x (L variables)
-    PHASE_TWO_LISTENING = 2   # verify on y (L variables)
+    PHASE_ONE_LISTENING = 1  # verify on x (L variables)
+    PHASE_TWO_LISTENING = 2  # verify on y (L variables)
     ACCEPT = 3
     REJECT = 0
 
@@ -18,6 +19,7 @@ class GKRVerifier:
     """
     An interactive verifier verifying the sum of GKR protocol.
     """
+
     def __init__(self, gkr: GKR, g: List[int], asserted_sum: int):
         self.state: GKRVerifierState = GKRVerifierState.PHASE_ONE_LISTENING
         assert len(g) == gkr.L, "g should have same size as number of variables in f2 or f3"
@@ -33,8 +35,10 @@ class GKRVerifier:
         # we put dummy polynomial here because the subroutine verifier does not evaluate h_g and f2: it just check the
         # sum.
         self.phase1_verifier: InteractivePMFVerifier = InteractivePMFVerifier(random.randint(1, 0xFFFFFFFFFFFFFFFF),
-                                                      PMF([MVLinear(L, {0: 0}, self.p), MVLinear(L, {0: 0}, self.p)]),
-                                                      asserted_sum=asserted_sum, checksum_only=True)
+                                                                              DummyPMF(num_multiplicands=2,
+                                                                                       num_variables=L, p=self.p),
+                                                                              asserted_sum=asserted_sum,
+                                                                              checksum_only=True)
         # phase 1 verifier generate sub claim u and its evaluation of product of h_g and f2 on x = u
 
         # phase 2 verifier: product of f1 at x = u and f3 times f2(u)
@@ -50,8 +54,8 @@ class GKRVerifier:
         if self.phase1_verifier.convinced:
             L = self.L
             self.phase2_verifier = InteractivePMFVerifier(random.randint(1, 0xFFFFFFFFFFFFFFFF),
-                                                          PMF([MVLinear(L, {0: 0}, self.p),
-                                                               MVLinear(L, {0: 0}, self.p)]),  # dummy
+                                                          DummyPMF(num_multiplicands=2,
+                                                                   num_variables=L, p=self.p),  # dummy
                                                           asserted_sum=self.phase1_verifier.sub_claim()[1],
                                                           checksum_only=True)
             self.state = GKRVerifierState.PHASE_TWO_LISTENING
@@ -82,15 +86,15 @@ class GKRVerifier:
             raise RuntimeError("Verifier is not in phase 2.")
         if not self.phase2_verifier.convinced:
             raise RuntimeError("Phase 2 verifier is not convinced.")
-        u = self.phase1_verifier.sub_claim()[0]     # x
-        v = self.phase2_verifier.sub_claim()[0]     # y
+        u = self.phase1_verifier.sub_claim()[0]  # x
+        v = self.phase2_verifier.sub_claim()[0]  # y
 
         # verify phase 2 verifier's claim
-        m1 = evaluate_sparse(self.f1, self.g+u+v, self.p)       # self.f1.eval(u+v)
+        m1 = evaluate_sparse(self.f1, self.g + u + v, self.p)  # self.f1.eval(u+v)
         m2 = evaluate(self.f3, v, self.p) * evaluate(self.f2, u, self.p) % self.p
         # self.f3.eval(v) * self.f2.eval(u) % self.p
 
-        expected = m1*m2 % self.p
+        expected = m1 * m2 % self.p
 
         if (self.phase2_verifier.sub_claim()[1] - expected) % self.p != 0:
             self.state = GKRVerifierState.REJECT
@@ -104,6 +108,6 @@ class GKRVerifier:
         return self.phase1_verifier.points.copy()
 
     def get_randomness_v(self) -> List[int]:
-        if self.state !=GKRVerifierState.ACCEPT:
+        if self.state != GKRVerifierState.ACCEPT:
             raise RuntimeError("Not in correct phase. ")
         return self.phase2_verifier.points.copy()

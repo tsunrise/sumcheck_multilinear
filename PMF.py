@@ -55,3 +55,34 @@ class PMF:
 
     def __repr__(self):
         return f"Product[{','.join([poly.__repr__() for poly in self.multiplicands])}]"
+
+
+class DummyPMF(PMF):
+    def __init__(self, num_multiplicands: int, num_variables: int, p: int):
+        super(DummyPMF, self).__init__([MVLinear(num_variables, dict(), p)])
+        self._num_multiplicands = num_multiplicands
+        self._num_variables = num_variables
+        self._p = p
+
+    def num_multiplicands(self) -> int:
+        return self._num_multiplicands
+
+    def eval(self, at: List[int]) -> int:
+        raise NotImplementedError("Dummy PMF Evaluated. ")
+
+    @property
+    def p(self):
+        return self._p
+
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError("Dummy PMF Evaluated. ")
+
+    def __copy__(self):
+        raise NotImplementedError("Dummy PMF Copied. ")
+
+    def __mul__(self, other: MVLinear) -> 'PMF':
+        raise NotImplementedError("Dummy PMF")
+
+    def __repr__(self):
+        return f"DummyPMF(num_multiplicands = {self._num_multiplicands}, " \
+               f"num_variables = {self._num_variables}, p = {self._p})"
