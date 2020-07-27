@@ -1,6 +1,7 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from IPPMFVerifier import InteractivePMFVerifier
+from FSPMFVerifier import PseudoRandomGen
 from PMF import PMF
 
 def binaryToList(b: int, numVariables: int) -> List[int]:
@@ -28,14 +29,17 @@ class InteractivePMFProver:
         self.poly: PMF = polynomial
         self.p = self.poly.p  # field size
 
-    def attemptProve(self, As: List[List[int]], verifier: InteractivePMFVerifier) -> None:
+    def attemptProve(self, As: List[List[int]], verifier: InteractivePMFVerifier, gen: Optional[PseudoRandomGen] = None) \
+            -> List[List[int]]:
         """
         Attempt to prove the sum.
         :param As: The bookkeeping table for each MVLinear in the PMF
         :param verifier: the active interactive PMF verifier instance
-        :return: the running time of verifier
+        :param gen: in FS mode, attemptProve will provide source of randomness for pseudorandom generator
+        :return: the prover message
         """
         l = self.poly.num_variables
+        msgs: List[List[int]] = []
         # vT: float = 0
         for i in range(1, l + 1):  # round
             products_sum: List[int] = [0] * (self.poly.num_multiplicands() + 1)
@@ -47,7 +51,10 @@ class InteractivePMFProver:
                         product = product * (
                                 ((A[b << 1] * ((1 - t) % self.p)) + (A[(b << 1) + 1] * t) % self.p) % self.p) % self.p
                     products_sum[t] = (products_sum[t] + product) % self.p
-
+            if gen:
+                gen.message.append(products_sum)
+            else:
+                msgs.append(products_sum)
             result, r = verifier.talk(products_sum)
 
             assert result
@@ -55,7 +62,10 @@ class InteractivePMFProver:
                 for b in range(2**(l-i)):
                     As[j][b] = (As[j][b << 1] * (1 - r) + As[j][(b << 1) + 1] * r) % self.p
 
-
+        if gen:
+            return gen.message
+        else:
+            return msgs
 
     def calculateSingleTable(self, index: int) -> List[int]:
         """

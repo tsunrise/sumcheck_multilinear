@@ -4,7 +4,7 @@ import time
 from copy import copy
 from typing import List
 
-from IPPMFVerifier import InteractivePMFVerifier
+from IPPMFVerifier import InteractivePMFVerifier, RandomGen
 from PMF import PMF
 
 MAX_SOUNDNESS_ERROR_ALLOWED = 2e-64
@@ -54,31 +54,23 @@ class Proof:
     """
 
     def __init__(self, proverMessage: List[List[int]]):
-        self.prover_messge = proverMessage
+        self.prover_messge = proverMessage.copy()
+
+
+class PseudoRandomGen(RandomGen):
+    def __init__(self, poly: PMF):
+        self.poly = poly
+        self.message: List[List[int]] = []
+
+    def getRandomElement(self) -> int:
+        return randomElement(self.poly, self.message)
 
 
 def verifyProof(theorem: Theorem, proof: Proof, maxAllowedSoundnessError: float = MAX_SOUNDNESS_ERROR_ALLOWED) -> bool:
-    v = PseudoRandomPMFVerifier(theorem.poly, theorem.asserted_sum, maxAllowedSoundnessError)
+    gen = PseudoRandomGen(theorem.poly)
+    v = InteractivePMFVerifier(theorem.poly, theorem.asserted_sum, maxAllowedSoundnessError=maxAllowedSoundnessError,
+                               randomGen=gen)
     for msg in proof.prover_messge:
+        gen.message.append(msg)
         v.talk(msg)
     return v.convinced
-
-
-class PseudoRandomPMFVerifier(InteractivePMFVerifier):
-    def __init__(self, polynomial: PMF, asserted_sum: int, maxAllowedSoundnessError=MAX_SOUNDNESS_ERROR_ALLOWED):
-        super().__init__(0, polynomial, asserted_sum, maxAllowedSoundnessError=maxAllowedSoundnessError /
-                                                                               (polynomial.num_variables + 1))
-        self.proverMessages: List[List[int]] = []
-        self.runtime = 0
-        # for timing stat
-
-    def talk(self, msgs: List[int]):
-        self.proverMessages.append(copy(msgs))
-        t0 = time.time()
-        result = super(PseudoRandomPMFVerifier, self).talk(msgs)
-        t1 = time.time()
-        self.runtime += t1 - t0
-        return result
-
-    def randomR(self) -> int:
-        return randomElement(self.poly, self.proverMessages)

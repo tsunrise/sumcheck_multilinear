@@ -1,10 +1,25 @@
 import math
 from random import Random
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from PMF import PMF
 
 MAX_ALLOWED_SOUNDNESS_ERROR = 2e-64
+
+
+class RandomGen: # abstract
+    def getRandomElement(self) -> int:
+        raise NotImplementedError()
+
+
+class TrueRandomGen(RandomGen):
+    def __init__(self, seed: int, p: int):
+        self.rand = Random()
+        self.rand.seed(seed)
+        self.p = p
+
+    def getRandomElement(self) -> int:
+        return self.rand.randint(0, self.p)
 
 
 class InteractivePMFVerifier:
@@ -12,15 +27,14 @@ class InteractivePMFVerifier:
     An interactive verifier that verifies the sum of the polynomial which is the product of multilinear functions
     """
 
-    def __init__(self, seed: int, poly: PMF, asserted_sum: int,
-                 maxAllowedSoundnessError: float = MAX_ALLOWED_SOUNDNESS_ERROR, checksum_only: bool = False):
+    def __init__(self, poly: PMF, asserted_sum: int,
+                 maxAllowedSoundnessError: float = MAX_ALLOWED_SOUNDNESS_ERROR, checksum_only: bool = False,
+                 randomGen: Optional[RandomGen] = None):
         self.checksum_only: bool = checksum_only
-
         self.p = poly.p
         self.poly = poly
         self.asserted_sum = asserted_sum % self.p
-        self.rand: Random = Random()
-        self.rand.seed(seed)
+        self.randomGen = randomGen if randomGen is not None else TrueRandomGen(Random().randint(0, 0xFFFFFFFF), self.p)
 
         self.active: bool = True
         self.convinced: bool = False
@@ -68,7 +82,7 @@ class InteractivePMFVerifier:
         """
 
     def randomR(self) -> int:
-        return self.rand.randint(0, self.p)
+        return self.randomGen.getRandomElement()
 
     def soundnessError(self) -> float:
         poly = self.poly

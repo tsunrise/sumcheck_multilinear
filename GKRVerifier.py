@@ -1,9 +1,8 @@
 from enum import Enum
-import random
 from typing import List, Optional, Tuple
 
 from GKR import GKR
-from IPPMFVerifier import InteractivePMFVerifier
+from IPPMFVerifier import InteractivePMFVerifier, RandomGen
 from PMF import DummyPMF, MVLinear
 from multilinear_extension import evaluate, evaluate_sparse
 
@@ -20,8 +19,9 @@ class GKRVerifier:
     An interactive verifier verifying the sum of GKR protocol.
     """
 
-    def __init__(self, gkr: GKR, g: List[int], asserted_sum: int):
+    def __init__(self, gkr: GKR, g: List[int], asserted_sum: int, randomGen: Optional[RandomGen] = None):
         self.state: GKRVerifierState = GKRVerifierState.PHASE_ONE_LISTENING
+        self.randomGen = randomGen
         assert len(g) == gkr.L, "g should have same size as number of variables in f2 or f3"
         self.f1 = gkr.f1
         self.f2 = gkr.f2
@@ -34,11 +34,11 @@ class GKRVerifier:
         # Phase 1 verifier: product of h_g (no need for verifier to multiply) and f2 (no need to access)
         # we put dummy polynomial here because the subroutine verifier does not evaluate h_g and f2: it just check the
         # sum.
-        self.phase1_verifier: InteractivePMFVerifier = InteractivePMFVerifier(random.randint(1, 0xFFFFFFFFFFFFFFFF),
-                                                                              DummyPMF(num_multiplicands=2,
+        self.phase1_verifier: InteractivePMFVerifier = InteractivePMFVerifier(DummyPMF(num_multiplicands=2,
                                                                                        num_variables=L, p=self.p),
                                                                               asserted_sum=asserted_sum,
-                                                                              checksum_only=True)
+                                                                              checksum_only=True,
+                                                                              randomGen=randomGen)
         # phase 1 verifier generate sub claim u and its evaluation of product of h_g and f2 on x = u
 
         # phase 2 verifier: product of f1 at x = u and f3 times f2(u)
@@ -53,11 +53,11 @@ class GKRVerifier:
 
         if self.phase1_verifier.convinced:
             L = self.L
-            self.phase2_verifier = InteractivePMFVerifier(random.randint(1, 0xFFFFFFFFFFFFFFFF),
-                                                          DummyPMF(num_multiplicands=2,
+            self.phase2_verifier = InteractivePMFVerifier(DummyPMF(num_multiplicands=2,
                                                                    num_variables=L, p=self.p),  # dummy
                                                           asserted_sum=self.phase1_verifier.sub_claim()[1],
-                                                          checksum_only=True)
+                                                          checksum_only=True,
+                                                          randomGen=self.randomGen)
             self.state = GKRVerifierState.PHASE_TWO_LISTENING
             return True, r
         if (not self.phase1_verifier.active) and (not self.phase1_verifier.convinced):

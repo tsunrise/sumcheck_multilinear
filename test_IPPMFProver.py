@@ -12,7 +12,7 @@ class TestInteractivePMFProver(TestCase):
             p = PMF([randomMVLinear(7, prime=P) for _ in range(5)])
             pv = InteractivePMFProver(p)
             As, s = pv.calculateAllBookKeepingTables()
-            v = InteractivePMFVerifier(random.randint(0, 0xFFFFFFFFFFFFFFFF), p, s)
+            v = InteractivePMFVerifier(p, s)
             pv.attemptProve(As, v)
 
             self.assertTrue(v.convinced)
