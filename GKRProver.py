@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Callable
+from typing import List, Tuple, Dict, Callable, Optional
 
 from GKR import GKR
 from GKRVerifier import GKRVerifier, GKRVerifierState
@@ -113,7 +113,8 @@ def initialize_PhaseTwo(f1: Dict[int, int], G: List[int], u: List[int], p: int) 
     return A_f1
 
 
-def _talk_process(As: Tuple[List[int], List[int]], L: int, p: int, talker: Callable[[List[int]], Tuple[bool, int]]):
+def _talk_process(As: Tuple[List[int], List[int]], L: int, p: int, talker: Callable[[List[int]], Tuple[bool, int]],
+                  msgRecorder: Optional[List[List[int]]] = None):
     num_multiplicands = 2
     for i in range(1, L+1):
         product_sum: List[int] = [0] * (num_multiplicands + 1)
@@ -125,7 +126,8 @@ def _talk_process(As: Tuple[List[int], List[int]], L: int, p: int, talker: Calla
                     product = product * (
                             ((A[b << 1] * ((1 - t) % p)) + (A[(b << 1) + 1] * t) % p) % p) % p
                 product_sum[t] = (product_sum[t] + product) % p
-
+        if msgRecorder is not None:
+            msgRecorder.append(product_sum)
         result, r = talker(product_sum)
 
         assert result
@@ -133,10 +135,12 @@ def _talk_process(As: Tuple[List[int], List[int]], L: int, p: int, talker: Calla
             for b in range(1 << (L-i)):
                 As[j][b] = (As[j][b << 1] * (1 - r) + As[j][(b << 1) + 1] * r) % p
 
-def talkToVerifierPhase1(A_hg: List[int], gkr: GKR, verifier: GKRVerifier) -> Tuple[List[int], int]:
+def talkToVerifierPhase1(A_hg: List[int], gkr: GKR, verifier: GKRVerifier,
+                         msgRecorder: Optional[List[List[int]]] = None) -> Tuple[List[int], int]:
     """
     Attempt to prove to GKR verifier.
 
+    :param randomGen: add randomness
     :param A_hg: Bookkeeping table of hg. A_hg will be modified in-place. Do not reuse it!
     :param gkr: The GKR function
     :return: randomness, f2(u)
@@ -148,12 +152,13 @@ def talkToVerifierPhase1(A_hg: List[int], gkr: GKR, verifier: GKRVerifier) -> Tu
     assert len(A_hg) == (1 << L), "Mismatch A_hg size and L"
 
     As: Tuple[List[int], List[int]] = (A_hg, gkr.f2.copy())
-    _talk_process(As, L, p, verifier.talk_phase1)
+    _talk_process(As, L, p, verifier.talk_phase1, msgRecorder)
 
     return verifier.get_randomness_u(), As[1][0]
 
 
-def talk_to_verifier_phase2(A_f1: List[int], gkr: GKR, f2u: int, verifier: GKRVerifier) -> None:
+def talk_to_verifier_phase2(A_f1: List[int], gkr: GKR, f2u: int, verifier: GKRVerifier,
+                            msgRecorder: Optional[List[List[int]]] = None) -> None:
     L = gkr.L
     p = gkr.p
     A_f3_f2u = [(x * f2u) % p for x in gkr.f3]
@@ -162,7 +167,7 @@ def talk_to_verifier_phase2(A_f1: List[int], gkr: GKR, f2u: int, verifier: GKRVe
     assert len(A_f1) == (1 << L), "Mismatch A_f1 size and L"
 
     As: Tuple[List[int], List[int]] = (A_f1, A_f3_f2u)
-    _talk_process(As, L, p, verifier.talk_phase2)
+    _talk_process(As, L, p, verifier.talk_phase2, msgRecorder)
 
 
 class GKRProver:
@@ -179,7 +184,9 @@ class GKRProver:
         s = sumOfGKR(A_hg, self.gkr.f2, self.gkr.p)
         return A_hg, G, s
 
-    def proveToVerifier(self, A_hg: List[int], G: List[int], s: int, verifier: GKRVerifier) -> None:
+    def proveToVerifier(self, A_hg: List[int], G: List[int], s: int, verifier: GKRVerifier,
+                        msgRecorderPhase1: Optional[List[List[int]]] = None,
+                        msgRecorderPhase2: Optional[List[List[int]]] = None) -> None:
         """
 
         :param A_hg: bookkeeping table h_g
@@ -190,10 +197,10 @@ class GKRProver:
 
         assert verifier.asserted_sum == s, "Asserted sum mismatch"
 
-        u, f2u = talkToVerifierPhase1(A_hg, self.gkr, verifier)
+        u, f2u = talkToVerifierPhase1(A_hg, self.gkr, verifier, msgRecorderPhase1)
         assert verifier.state == GKRVerifierState.PHASE_TWO_LISTENING, "Verifier does not accept phase 1 proof"
 
         A_f1 = initialize_PhaseTwo(self.gkr.f1, G, u, self.gkr.p)
-        talk_to_verifier_phase2(A_f1, self.gkr, f2u, verifier)
+        talk_to_verifier_phase2(A_f1, self.gkr, f2u, verifier, msgRecorderPhase2)
 
 
