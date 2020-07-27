@@ -11,6 +11,7 @@ def generateTheoremAndProof(poly: PMF, maxAllowedSoundnessError=MAX_SOUNDNESS_ER
         -> Tuple[Theorem, Proof, PseudoRandomPMFVerifier]:
     """
     Generate the theorem (poly itself and the asserted sum) and its proof.
+    :param maxAllowedSoundnessError:
     :param poly: The PMF polynomial
     :return: theorem, proof, and the (hopefully) convinced pseudorandom verifier
     """
