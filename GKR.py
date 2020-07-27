@@ -29,3 +29,5 @@ class GKR:
         self.p = p
 
 
+    def __copy__(self) -> 'GKR':
+        return GKR(self.f1, self.f2, self.f3, self.p, self.L)
