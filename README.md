@@ -43,7 +43,7 @@ p*p # ArithmeticError: no longer multilinear
 
 #### Represent a product of multilinear polynomial (PMF)
 
-Documentation TBD
+Documentation to be completed
 
 ### Initialize the Interactive Verifier
 
@@ -180,7 +180,8 @@ poly = PMF([randomMVLinear(10, prime) for _ in range(10)])
 theorem, proof, _ = generateTheoremAndProof(poly, 2e-64)
 verifyProof(theorem, proof, 2e-64)
 ```
-
-## GKR Protocol Documentation TBD
-
+## Prover/Verifier Runtime Visualization
 ![image-20200625132007528](assets/image-20200625132007528.png)
+
+## GKR Protocol Documentation to be completed
+
