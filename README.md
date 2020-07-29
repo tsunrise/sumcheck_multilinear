@@ -1,7 +1,7 @@
 # Sumcheck protocol for Multilinear polynomials and GKR Function
 ![unit test](https://github.com/tsunrise/sumcheck_multilinear/workflows/unit%20test/badge.svg)<br>
-A python implementation of sumcheck protocol for multilinear polynomial and product of multilinear polynomials (PMF). Sumcheck protocol is useful in interactive proofs (IP). 
-
+A python implementation of sumcheck protocol for multilinear polynomial, product of multilinear polynomials (PMF), and GKR function. Sumcheck protocol is useful in interactive proofs (IP) and zero-knowledge proofs (ZKP). 
+Algorithms are adapted from Xie, T. et al. https://eprint.iacr.org/2019/317.pdf. 
 ## Getting Started
 
 #### Represent a multilinear polynomial
