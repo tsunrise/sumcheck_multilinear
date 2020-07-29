@@ -1,4 +1,4 @@
-# Sumcheck protocol for Multilinear polynomials 
+# Sumcheck protocol for Multilinear polynomials and GKR Function
 ![unit test](https://github.com/tsunrise/sumcheck_multilinear/workflows/unit%20test/badge.svg)<br>
 A python implementation of sumcheck protocol for multilinear polynomial and product of multilinear polynomials (PMF). Sumcheck protocol is useful in interactive proofs (IP). 
 
@@ -43,7 +43,7 @@ p*p # ArithmeticError: no longer multilinear
 
 #### Represent a product of multilinear polynomial (PMF)
 
-
+Documentation TBD
 
 ### Initialize the Interactive Verifier
 
@@ -181,19 +181,6 @@ theorem, proof, _ = generateTheoremAndProof(poly, 2e-64)
 verifyProof(theorem, proof, 2e-64)
 ```
 
-## Project Todo List
-### Phase 1: Multilinear Polynomial
-- Completed: A sparse representation and evaluation oracle for multilinear function. 
-- Completed: An Interactive Verifier. 
-- Completed: A naïve prover, taking O(n*2^n) time. 
-- Completed: A faster prover using dynamic programming taking O(2^n) time. (Reference: Xie, Zhang, Zhang, Papamanthou, Song, 2019, https://eprint.iacr.org/2019/317.pdf)
-- Completed: A non-interactive verifier using random oracle based on Flake-2b (using Fiat-Shamir Transform). 
-
-### Phase 2: Product of Multilinear Polynomial
-- Todo: Representation of Product of Multilinear Polynomial (PMF)
-- Todo: An Interactive Verifier for PMF Sum
-- Todo: A linear prover of PMF Sum
-- Todo: Fiat-Shamir Transform
-
+## GKR Protocol Documentation TBD
 
 ![image-20200625132007528](assets/image-20200625132007528.png)
